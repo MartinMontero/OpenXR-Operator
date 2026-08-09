@@ -27,7 +27,7 @@ jobs:
           uv run --project operator ruff check operator/
           uv run --project operator gdlint addon/ || echo "gdlint: no addon sources yet"
       - name: Types
-        run: uv run --project operator mypy --strict operator/src
+        run: uv run --project operator mypy --strict --config-file operator/pyproject.toml operator/src
       - name: Vendor gate
         run: python3 tools/vendorscan.py
       - name: Digest gate (S-01)
