@@ -34,7 +34,7 @@ jobs:
         run: bash tools/check-action-pins.sh
       - name: Bind gate (F-002)
         run: |
-          if grep -rn --include='*.py' --include='*.gd' "0\.0\.0\.0" operator/ addon/; then
+          if grep -rn --exclude-dir=.venv --include='*.py' --include='*.gd' "0\.0\.0\.0" operator/ addon/; then
             echo "::error::service bound to 0.0.0.0 (finding F-002)"
             exit 1
           fi
