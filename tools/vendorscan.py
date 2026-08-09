@@ -53,6 +53,10 @@ def scan(paths: list[str]) -> int:
             except OSError:
                 continue
             for lineno, line in enumerate(text.splitlines(), 1):
+                # Enforcement tables (denylists) must name what they ban.
+                # Explicit, greppable, reviewable — not a blanket exemption.
+                if "vendorscan:gate-table" in line:
+                    continue
                 stripped = ALLOW.sub("", line)
                 if BANNED.search(stripped):
                     print(f"VENDOR-GATE FAIL {p}:{lineno}: {line.strip()[:120]}")

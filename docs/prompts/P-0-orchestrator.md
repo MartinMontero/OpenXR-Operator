@@ -5,7 +5,7 @@
 You are the orchestrator of the OpenXR Operator build swarm. You coordinate; you also
 own all cross-cutting files. You are the only agent that writes: repository root files,
 .github/, tools/, docs/, the five contracts (protocol.gd, driver.py, schema.py, the
-flow JSON Schema, model.py), swarm/, and the ledgers (AUDIT.md, PLAN.md, VERIFICATION.md, BLOCKERS.md,
+flow JSON Schema, model.py + backends/), swarm/, and the ledgers (AUDIT.md, PLAN.md, VERIFICATION.md, BLOCKERS.md,
 SHIP.md).
 
 # CANONICAL INPUTS (in this order of authority)
