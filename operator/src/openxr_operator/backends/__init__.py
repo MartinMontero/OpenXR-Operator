@@ -2,29 +2,40 @@
 
 Registration is explicit: shipped adapters are imported at the bottom of
 this module so their @register decorators run. Registered-but-unshipped
-adapters (LOCAL_IDS/HOSTED_IDS below) resolve to a named error, not a
+adapters (see model.BACKEND_REGISTER) resolve to a named error, not a
 silent fallback.
 """
+
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from ..model import (
+    LOOPBACK_HOSTS,
     BackendRejected,
     ModelBackend,
     assert_host_allowed,
     assert_model_allowed,
-    LOOPBACK_HOSTS,
 )
 
 _REGISTRY: dict[str, Callable[..., ModelBackend]] = {}
 
 LOCAL_IDS = (
-    "local_ollama", "local_llamacpp", "local_vllm", "local_lmstudio",
+    "local_ollama",
+    "local_llamacpp",
+    "local_vllm",
+    "local_lmstudio",
 )
 HOSTED_IDS = (
-    "hosted_google", "hosted_mistral", "hosted_anthropic", "hosted_cohere",
-    "hosted_deepseek", "hosted_alibaba", "hosted_together", "hosted_groq",
+    "hosted_google",
+    "hosted_mistral",
+    "hosted_anthropic",
+    "hosted_cohere",
+    "hosted_deepseek",
+    "hosted_alibaba",
+    "hosted_together",
+    "hosted_groq",
 )
 ALL_IDS = LOCAL_IDS + HOSTED_IDS
 
@@ -33,10 +44,13 @@ class ModelUnreachable(RuntimeError):
     pass
 
 
-def register(backend_id: str) -> Callable[[Callable[..., ModelBackend]], Callable[..., ModelBackend]]:
+def register(
+    backend_id: str,
+) -> Callable[[Callable[..., ModelBackend]], Callable[..., ModelBackend]]:
     def deco(factory: Callable[..., ModelBackend]) -> Callable[..., ModelBackend]:
         _REGISTRY[backend_id] = factory
         return factory
+
     return deco
 
 
@@ -54,7 +68,8 @@ def resolve(cfg: dict[str, Any]) -> ModelBackend:
     if backend_id not in _REGISTRY:
         raise BackendRejected(
             f"unknown backend {backend_id!r}; "
-            f"shipped: {sorted(_REGISTRY)}; registered: {sorted(ALL_IDS)}")
+            f"shipped: {sorted(_REGISTRY)}; registered: {sorted(ALL_IDS)}"
+        )
 
     model_id = str(cfg.get("model", ""))
     assert_model_allowed(model_id)
@@ -65,27 +80,31 @@ def resolve(cfg: dict[str, Any]) -> ModelBackend:
 
     if caps.locality == "local":
         if allow:
-            raise BackendRejected(
-                f"{backend_id} is local; egress.allow must be empty")
+            raise BackendRejected(f"{backend_id} is local; egress.allow must be empty")
         # A "local" adapter pointed off-loopback is nonsense and a hole.
         host = str(cfg.get("host", "")).split("://")[-1].split(":")[0].lower()
         if host and host not in LOOPBACK_HOSTS:
             raise BackendRejected(
-                f"{backend_id} is local; host must be loopback, got {host!r}")
+                f"{backend_id} is local; host must be loopback, got {host!r}"
+            )
     else:
         if len(allow) != 1 or allow[0] != caps.egress_domain:
             raise BackendRejected(
                 f"{backend_id} requires egress.allow == "
-                f"['{caps.egress_domain}']; got {allow}")
+                f"['{caps.egress_domain}']; got {allow}"
+            )
         assert_host_allowed(allow[0], allow)  # unconditional denial, central
 
     if not backend.health():
         raise ModelUnreachable(
             f"backend {backend_id!r} unreachable; fix configuration. "
-            "No automatic fallback is performed (D-13).")
+            "No automatic fallback is performed (D-13)."
+        )
     return backend
 
 
 # Shipped adapters — imported so their @register decorators run.
-from . import local_ollama  # noqa: F401,E402
-from . import local_llamacpp  # noqa: F401,E402
+from . import (
+    local_llamacpp,  # noqa: F401
+    local_ollama,  # noqa: F401
+)

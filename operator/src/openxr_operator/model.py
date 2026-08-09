@@ -43,20 +43,34 @@ Locality = Literal["local", "hosted"]
 # not overridable by a flow, a config file, or an env var. (D-11: the gate
 # covers what these vendors make and run — servers, SDKs, models — not the
 # JSON request shape one of them popularised.)
-FORBIDDEN_HOSTS: frozenset[str] = frozenset({
-    "api.openai.com", "openai.com", "www.openai.com",  # vendorscan:gate-table
-    "oai.azure.com",                    # vendorscan:gate-table - OpenAI models via Azure
-    "api.x.ai", "x.ai",                 # vendorscan:gate-table - xAI
-    "llama.meta.com", "llama-api.meta.com",  # vendorscan:gate-table - Meta
-})
+FORBIDDEN_HOSTS: frozenset[str] = frozenset(
+    {
+        "api.openai.com",  # vendorscan:gate-table
+        "openai.com",  # vendorscan:gate-table
+        "www.openai.com",  # vendorscan:gate-table
+        "oai.azure.com",  # vendorscan:gate-table - OpenAI models via Azure
+        "api.x.ai",  # vendorscan:gate-table
+        "x.ai",  # vendorscan:gate-table - xAI
+        "llama.meta.com",  # vendorscan:gate-table
+        "llama-api.meta.com",  # vendorscan:gate-table - Meta
+    }
+)
 
 # Model identifiers whose lineage fails the vendor gate, checked at startup.
 # Substring match on the configured model id: hosted catalogues may carry
 # excluded-lineage models even when the provider itself passes the gate.
 # (vendorscan:gate-table applies to the tuple below.)
 FORBIDDEN_MODEL_SUBSTRINGS: tuple[str, ...] = (
-    "llama", "llava", "bakllava", "vicuna",  # vendorscan:gate-table
-    "gpt-3", "gpt-4", "gpt-5", "o1-", "o3-", "o4-",  # vendorscan:gate-table
+    "llama",  # vendorscan:gate-table
+    "llava",  # vendorscan:gate-table
+    "bakllava",  # vendorscan:gate-table
+    "vicuna",  # vendorscan:gate-table
+    "gpt-3",  # vendorscan:gate-table
+    "gpt-4",  # vendorscan:gate-table
+    "gpt-5",  # vendorscan:gate-table
+    "o1-",  # vendorscan:gate-table
+    "o3-",  # vendorscan:gate-table
+    "o4-",  # vendorscan:gate-table
     "grok",  # vendorscan:gate-table
 )
 
@@ -79,16 +93,16 @@ class Capabilities:
     supports_images: bool
     max_images_per_request: int
     locality: Locality
-    egress_domain: str | None          # None for local
+    egress_domain: str | None  # None for local
 
 
 @dataclass(frozen=True)
 class ModelResponse:
     raw: str
     parsed: dict[str, Any]
-    model: str                          # including digest pin where applicable
+    model: str  # including digest pin where applicable
     backend_id: str
-    constraint: ConstrainMode           # mode actually applied to this response
+    constraint: ConstrainMode  # mode actually applied to this response
     duration_ns: int
     usage: dict[str, int] = field(default_factory=dict)
 
@@ -106,9 +120,14 @@ class ModelBackend(Protocol):
         """True if the backend is reachable and the model is available."""
         ...
 
-    def act(self, system: str, task: str, scene_tree: dict[str, Any],
-            image_paths: list[Path],
-            schema: dict[str, Any]) -> ModelResponse:
+    def act(
+        self,
+        system: str,
+        task: str,
+        scene_tree: dict[str, Any],
+        image_paths: list[Path],
+        schema: dict[str, Any],
+    ) -> ModelResponse:
         """Send observation plus task; return a shape-validated response.
 
         Adapters that constrain decoding must apply `schema` at the provider
@@ -124,14 +143,20 @@ def encode_images(paths: list[Path]) -> list[str]:
 
 
 def render_user_text(task: str, scene_tree: dict[str, Any]) -> str:
-    return (f"Task: {task}\n\n"
-            f"Scene tree (JSON):\n{json.dumps(scene_tree, indent=2)}\n\n"
-            "Reply with a single JSON object matching the required schema.")
+    return (
+        f"Task: {task}\n\n"
+        f"Scene tree (JSON):\n{json.dumps(scene_tree, indent=2)}\n\n"
+        "Reply with a single JSON object matching the required schema."
+    )
 
 
-def parse_model_response(content: str, model: str, backend_id: str,
-                         constraint: ConstrainMode,
-                         duration_ns: int) -> ModelResponse:
+def parse_model_response(
+    content: str,
+    model: str,
+    backend_id: str,
+    constraint: ConstrainMode,
+    duration_ns: int,
+) -> ModelResponse:
     """Shared response floor for every adapter: non-empty, JSON, an object."""
     if not content:
         raise ModelError("empty content from model")
@@ -141,9 +166,14 @@ def parse_model_response(content: str, model: str, backend_id: str,
         raise ModelError(f"non-JSON from model: {content[:400]}") from exc
     if not isinstance(parsed, dict):
         raise ModelError("model returned JSON that is not an object")
-    return ModelResponse(raw=content, parsed=parsed, model=model,
-                         backend_id=backend_id, constraint=constraint,
-                         duration_ns=duration_ns)
+    return ModelResponse(
+        raw=content,
+        parsed=parsed,
+        model=model,
+        backend_id=backend_id,
+        constraint=constraint,
+        duration_ns=duration_ns,
+    )
 
 
 def assert_host_allowed(host: str, allowlist: list[str]) -> None:
@@ -161,4 +191,5 @@ def assert_model_allowed(model_id: str) -> None:
     for bad in FORBIDDEN_MODEL_SUBSTRINGS:
         if bad in m:
             raise BackendRejected(
-                f"model {model_id!r} matches excluded lineage {bad!r}")
+                f"model {model_id!r} matches excluded lineage {bad!r}"
+            )

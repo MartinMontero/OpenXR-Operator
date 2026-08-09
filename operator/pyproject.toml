@@ -1,7 +1,7 @@
 [project]
 name = "openxr-operator"
 version = "0.1.0"
-description = "Local-only AI agent that observes and drives Godot XR applications"
+description = "Local-first AI agent that observes and drives Godot XR applications"
 requires-python = ">=3.11"
 license = { text = "AGPL-3.0-or-later" }
 dependencies = [
@@ -26,6 +26,13 @@ dev = [
 
 [project.scripts]
 openxr-operator = "openxr_operator.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openxr_operator"]
 
 [tool.mypy]
 strict = true

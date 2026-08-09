@@ -1,4 +1,5 @@
 """Local adapter: Ollama (reference backend). Plain httpx, no vendor SDK."""
+
 from __future__ import annotations
 
 import time
@@ -43,24 +44,33 @@ class OllamaBackend:
 
     def health(self) -> bool:
         try:
-            return self._client.get(
-                f"{self._host}/api/tags", timeout=5.0).status_code == 200
+            return (
+                self._client.get(f"{self._host}/api/tags", timeout=5.0).status_code
+                == 200
+            )
         except httpx.HTTPError:
             return False
 
-    def act(self, system: str, task: str, scene_tree: dict[str, Any],
-            image_paths: list[Path],
-            schema: dict[str, Any]) -> ModelResponse:
+    def act(
+        self,
+        system: str,
+        task: str,
+        scene_tree: dict[str, Any],
+        image_paths: list[Path],
+        schema: dict[str, Any],
+    ) -> ModelResponse:
         payload: dict[str, Any] = {
             "model": self._model,
             "messages": [
                 {"role": "system", "content": system},
-                {"role": "user",
-                 "content": render_user_text(task, scene_tree),
-                 "images": encode_images(image_paths)},
+                {
+                    "role": "user",
+                    "content": render_user_text(task, scene_tree),
+                    "images": encode_images(image_paths),
+                },
             ],
             "stream": False,
-            "format": schema,                      # constrained decoding
+            "format": schema,  # constrained decoding
             "options": {"temperature": 0, "num_ctx": self._num_ctx},
         }
         t0 = time.monotonic_ns()
@@ -73,5 +83,9 @@ class OllamaBackend:
         body = r.json()
         content = (body.get("message") or {}).get("content", "")
         return parse_model_response(
-            content, str(body.get("model", self._model)), self.backend_id,
-            "native", time.monotonic_ns() - t0)
+            content,
+            str(body.get("model", self._model)),
+            self.backend_id,
+            "native",
+            time.monotonic_ns() - t0,
+        )

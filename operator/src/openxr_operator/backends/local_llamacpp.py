@@ -4,6 +4,7 @@ Speaks the OpenAI-compatible request shape, which the gate permits
 (D-11: the shape is not an artifact). Images are content parts, not a
 top-level array as in Ollama — that variance is why adapters exist.
 """
+
 from __future__ import annotations
 
 import time
@@ -41,7 +42,7 @@ class LlamaCppBackend:
             # If a server build silently ignores response_format, the reply
             # fails parse_model_response loudly; it never pretends.
             constrained_decoding="native",
-            supports_images=True,               # requires an mmproj build
+            supports_images=True,  # requires an mmproj build
             max_images_per_request=4,
             locality="local",
             egress_domain=None,
@@ -49,21 +50,30 @@ class LlamaCppBackend:
 
     def health(self) -> bool:
         try:
-            return self._client.get(
-                f"{self._host}/health", timeout=5.0).status_code == 200
+            return (
+                self._client.get(f"{self._host}/health", timeout=5.0).status_code == 200
+            )
         except httpx.HTTPError:
             return False
 
-    def act(self, system: str, task: str, scene_tree: dict[str, Any],
-            image_paths: list[Path],
-            schema: dict[str, Any]) -> ModelResponse:
+    def act(
+        self,
+        system: str,
+        task: str,
+        scene_tree: dict[str, Any],
+        image_paths: list[Path],
+        schema: dict[str, Any],
+    ) -> ModelResponse:
         parts: list[dict[str, Any]] = [
-            {"type": "text", "text": render_user_text(task, scene_tree)}]
+            {"type": "text", "text": render_user_text(task, scene_tree)}
+        ]
         for b64 in encode_images(image_paths):
-            parts.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:image/png;base64,{b64}"},
-            })
+            parts.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{b64}"},
+                }
+            )
         payload: dict[str, Any] = {
             "model": self._model,
             "messages": [
@@ -73,14 +83,12 @@ class LlamaCppBackend:
             "temperature": 0,
             "response_format": {
                 "type": "json_schema",
-                "json_schema": {"name": "action", "schema": schema,
-                                "strict": True},
+                "json_schema": {"name": "action", "schema": schema, "strict": True},
             },
         }
         t0 = time.monotonic_ns()
         try:
-            r = self._client.post(f"{self._host}/v1/chat/completions",
-                                  json=payload)
+            r = self._client.post(f"{self._host}/v1/chat/completions", json=payload)
         except httpx.HTTPError as exc:
             raise ModelError(f"llama-server unreachable: {exc}") from exc
         if r.status_code != 200:
@@ -88,5 +96,5 @@ class LlamaCppBackend:
         body = r.json()
         content = body["choices"][0]["message"]["content"]
         return parse_model_response(
-            content, self._model, self.backend_id, "native",
-            time.monotonic_ns() - t0)
+            content, self._model, self.backend_id, "native", time.monotonic_ns() - t0
+        )
