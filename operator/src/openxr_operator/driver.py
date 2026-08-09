@@ -5,6 +5,7 @@ interchangeable. Everything above this protocol is engine-agnostic.
 Frame carries the tier actually used, so a report can never claim a
 fidelity it did not have.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -32,7 +33,7 @@ class TreeNode:
     visible: bool
     groups: tuple[str, ...]
     text: str | None
-    children: tuple["TreeNode", ...]
+    children: tuple[TreeNode, ...]
     truncated_children: int
 
 

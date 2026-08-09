@@ -4,15 +4,22 @@ Single source of truth for the action contract: passed to the model as
 `format` AND used to validate the result. One definition, two uses —
 they cannot drift. Fixes v2.0 finding F-004.
 """
+
 from __future__ import annotations
 
 from typing import Any
 
 READ_ONLY_ACTIONS = frozenset({"observe", "assert_property", "finish"})
-MUTATING_ACTIONS = frozenset({
-    "set_property", "write_code", "assign_script",
-    "move_controller", "press", "restart_scene",
-})
+MUTATING_ACTIONS = frozenset(
+    {
+        "set_property",
+        "write_code",
+        "assign_script",
+        "move_controller",
+        "press",
+        "restart_scene",
+    }
+)
 ALL_ACTIONS = READ_ONLY_ACTIONS | MUTATING_ACTIONS
 
 ACTION_SCHEMA: dict[str, Any] = {
@@ -31,12 +38,16 @@ ACTION_SCHEMA: dict[str, Any] = {
         "hand": {"type": "string", "enum": ["left", "right"]},
         "action_name": {"type": "string", "maxLength": 64},
         "position": {
-            "type": "array", "items": {"type": "number"},
-            "minItems": 3, "maxItems": 3,
+            "type": "array",
+            "items": {"type": "number"},
+            "minItems": 3,
+            "maxItems": 3,
         },
         "rotation": {
-            "type": "array", "items": {"type": "number"},
-            "minItems": 4, "maxItems": 4,
+            "type": "array",
+            "items": {"type": "number"},
+            "minItems": 4,
+            "maxItems": 4,
         },
         "float_value": {"type": "number", "minimum": -1.0, "maximum": 1.0},
         "summary": {"type": "string", "maxLength": 1000},
@@ -60,7 +71,9 @@ class ActionRejected(ValueError):
     pass
 
 
-def validate_action(obj: dict[str, Any], capabilities: frozenset[str]) -> dict[str, Any]:
+def validate_action(
+    obj: dict[str, Any], capabilities: frozenset[str]
+) -> dict[str, Any]:
     """Validate shape, then capability. Raises ActionRejected."""
     import jsonschema
 
