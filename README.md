@@ -5,8 +5,9 @@ A local-only AI agent that observes and drives Godot XR applications.
 An in-engine Godot addon (MIT) instruments the running app; a Python agent
 (AGPL-3.0-or-later) observes frames and scene trees over an authenticated
 loopback channel, and acts through a declarative flow runner with
-human-approved diffs on every mutation. All inference is local (Ollama).
-No hosted component of any kind.
+human-approved diffs on every mutation. All inference is local; model backends
+plug into the ModelBackend contract (D-09) — Ollama is the reference backend,
+not the only one. No hosted component of any kind.
 
 **Canonical design:** `docs/BUILD_KIT_v3.pdf` (Kimi Code Swarm Edition).
 **Build orchestration:** see `swarm/STATUS.md` and `docs/prompts/`.
@@ -21,7 +22,7 @@ See `CHANGELOG.md` and the decision register (build kit Part 8).
 | `addon/` | MIT | In-engine Godot addon (GDScript) |
 | `layer/` | MIT | Optional OpenXR API layer (C++17/CMake), explicit + env-scoped only |
 | `operator/` | AGPL-3.0-or-later | Python agent, flow runner, web UI |
-| `docs/contracts/` | — | The four frozen contracts (wire protocol, Driver, action schema, flow schema) |
+| `docs/contracts/` | — | Five frozen contracts (wire protocol, Driver, action schema, flow schema, ModelBackend) |
 | `flows/` | — | Declarative test flows |
 | `tools/` | — | Gate enforcement (vendor scan, doc drift, action pinning) |
 | `swarm/` | — | Agent coordination: task cards, requests, decisions, status |

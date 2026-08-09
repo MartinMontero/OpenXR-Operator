@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vendor gate and licence gate (build kit v2.0 section 7.1, v3.0 S-01).
+"""Vendor gate and licence gate (build kit v2.0 §7.1, v3.0 S-01; D-10 scope).
 
 Fails the build on any Meta/OpenAI/xAI reference in the lockfile or source
 tree, and on any dependency licence not on the allowlist. Policy that lives
@@ -16,7 +16,14 @@ BANNED = re.compile(
     re.IGNORECASE,
 )
 # Name fragments that false-positive the banned patterns and are allowed.
-ALLOW = re.compile(r"(openxrv|openxr)", re.IGNORECASE)
+# D-10 (2026-08-09): the gate bans vendor artifacts, not interface shapes.
+# "openai-compatible" names a wire format spoken by llama.cpp/vLLM/LM Studio;
+# the artifact (a package named exactly `openai`) still fails, as does any
+# bare occurrence outside these compounds.
+ALLOW = re.compile(
+    r"(openxrv|openxr|openai-compatible|openai compatible|llama-server|llama\.cpp)",
+    re.IGNORECASE,
+)
 
 SCAN_SUFFIXES = {".py", ".gd", ".toml", ".lock", ".cfg", ".yaml", ".yml", ".txt", ".json"}
 SKIP_DIRS = {".git", ".venv", "runs", "sbom.json"}
@@ -30,7 +37,11 @@ LICENCE_ALLOWLIST = {
 def scan(paths: list[str]) -> int:
     hits = 0
     for raw in paths:
-        for p in Path(raw).rglob("*"):
+        root = Path(raw)
+        # rglob yields nothing for a file argument — iterate it directly,
+        # or the gate silently skips pyproject.toml (its highest-value target).
+        candidates = [root] if root.is_file() else root.rglob("*")
+        for p in candidates:
             if not p.is_file() or p.suffix not in SCAN_SUFFIXES:
                 continue
             if any(part in SKIP_DIRS for part in p.parts):

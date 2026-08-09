@@ -188,6 +188,6 @@ BACKEND_REGISTER: tuple[dict[str, str], ...] = (
         "adapter": "planned",
         "status": "registered, not shipped",
         "constrained_decoding": "varies (guided_json / response_format); adapter must declare",
-        "gate": "D-10: wire format is not an artifact — plain httpx only, no openai package",
+        "gate": "D-10: wire format is not an artifact — plain httpx only, no vendor SDK",
     },
 )
