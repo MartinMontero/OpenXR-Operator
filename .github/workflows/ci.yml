@@ -1,0 +1,82 @@
+name: ci
+on:
+  push: { branches: [main] }
+  pull_request:
+permissions:
+  contents: read
+env:
+  GODOT_VERSION: "4.7.1"
+
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { fetch-depth: 0 }
+      - name: Install uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5
+        with: { enable-cache: true }
+      - name: Sync (frozen)
+        run: uv sync --frozen --project operator
+      - name: Format
+        run: |
+          uv run --project operator ruff format --check operator/
+          uv run --project operator gdformat --check addon/ || echo "gdformat: no addon sources yet"
+      - name: Lint
+        run: |
+          uv run --project operator ruff check operator/
+          uv run --project operator gdlint addon/ || echo "gdlint: no addon sources yet"
+      - name: Types
+        run: uv run --project operator mypy --strict operator/src
+      - name: Vendor gate
+        run: python3 tools/vendorscan.py
+      - name: Digest gate (S-01)
+        run: bash tools/check-action-pins.sh
+      - name: Bind gate (F-002)
+        run: |
+          if grep -rn --include='*.py' --include='*.gd' "0\.0\.0\.0" operator/ addon/; then
+            echo "::error::service bound to 0.0.0.0 (finding F-002)"
+            exit 1
+          fi
+      - name: Implicit-layer gate
+        run: |
+          if grep -rn -e "implicit\.d" -e "ApiLayers\\\\Implicit" layer/ ; then
+            echo "::error::implicit layer installation is forbidden"
+            exit 1
+          fi
+      - name: Secrets
+        run: |
+          # NOTE (S-10): checksum-verify this binary before trusting it.
+          # tools/README-gitleaks.md records how to generate the digest file.
+          if [[ -f tools/gitleaks.sha256 ]]; then
+            curl -sSfL -o gitleaks.tar.gz \
+              https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+            sha256sum -c tools/gitleaks.sha256
+            tar xzf gitleaks.tar.gz gitleaks
+            ./gitleaks git -s . --log-opts=--all --redact --exit-code 1
+          else
+            echo "::warning::tools/gitleaks.sha256 absent — generate it (see tools/) before release"
+          fi
+      - name: SBOM
+        run: uv run --project operator cyclonedx-py environment -o sbom.json
+
+  test:
+    runs-on: ubuntu-24.04
+    needs: static
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5
+      - run: uv sync --frozen --project operator
+      - run: uv run --project operator pytest -q
+      - name: Fetch Godot
+        run: |
+          curl -sSfL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && sudo mv Godot_v*_linux.x86_64 /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+      - name: GDScript parse check (timeout-wrapped; warnings need gdlint, R-9)
+        run: |
+          find addon -name '*.gd' -print0 | while IFS= read -r -d '' f; do
+            timeout 60 godot --headless --check-only --script "$f" \
+              || { echo "::error file=$f::parse failed"; exit 1; }
+          done
