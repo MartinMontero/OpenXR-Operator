@@ -6,7 +6,7 @@ An in-engine Godot addon (MIT) instruments the running app; a Python agent
 (AGPL-3.0-or-later) observes frames and scene trees over an authenticated
 loopback channel, and acts through a declarative flow runner with
 human-approved diffs on every mutation. All inference is local; model backends
-plug into the ModelBackend contract (D-09) — Ollama is the reference backend,
+plug into the ModelBackend contract (D-10) — Ollama is the reference backend,
 not the only one. No hosted component of any kind.
 
 **Canonical design:** `docs/BUILD_KIT_v3.pdf` (Kimi Code Swarm Edition).

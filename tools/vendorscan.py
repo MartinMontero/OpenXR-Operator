@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vendor gate and licence gate (build kit v2.0 §7.1, v3.0 S-01; D-10 scope).
+"""Vendor gate and licence gate (build kit v2.0 §7.1, v3.0 S-01; D-11 scope).
 
 Fails the build on any Meta/OpenAI/xAI reference in the lockfile or source
 tree, and on any dependency licence not on the allowlist. Policy that lives
@@ -16,7 +16,7 @@ BANNED = re.compile(
     re.IGNORECASE,
 )
 # Name fragments that false-positive the banned patterns and are allowed.
-# D-10 (2026-08-09): the gate bans vendor artifacts, not interface shapes.
+# D-11 (2026-08-09): the gate bans vendor artifacts, not interface shapes.
 # "openai-compatible" names a wire format spoken by llama.cpp/vLLM/LM Studio;
 # the artifact (a package named exactly `openai`) still fails, as does any
 # bare occurrence outside these compounds.

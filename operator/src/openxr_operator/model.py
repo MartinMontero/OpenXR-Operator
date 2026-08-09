@@ -2,11 +2,11 @@
 
 Provenance:
   sources: Build Kit v3.0 Part 2; kit v2.0 §3.5/§4.4 defect analysis (2026-08-09);
-           decisions D-09 (protocol + multiple adapters) and D-10 (vendor gate
+           decisions D-10 (protocol + multiple adapters) and D-11 (vendor gate
            covers artifacts, not wire formats) — swarm/decisions/.
   verified: 2026-08-09
 
-D-09 rationale: kit v2.0 shipped a concrete ``OllamaClient`` with no seam,
+D-10 rationale: kit v2.0 shipped a concrete ``OllamaClient`` with no seam,
 while the engine side got ``Driver(Protocol)`` — same problem, opposite
 treatment. This file is the model-side seam. Ollama is the reference backend,
 not the only one.
@@ -165,7 +165,7 @@ class OllamaBackend:
         )
 
 
-# Backend register (D-09). Same shape as the dependency register: licence
+# Backend register (D-10). Same shape as the dependency register: licence
 # and gate status stated, not assumed. Adapters land in their build waves;
 # an entry here is a commitment to evaluate, not shipped code.
 BACKEND_REGISTER: tuple[dict[str, str], ...] = (
@@ -188,6 +188,6 @@ BACKEND_REGISTER: tuple[dict[str, str], ...] = (
         "adapter": "planned",
         "status": "registered, not shipped",
         "constrained_decoding": "varies (guided_json / response_format); adapter must declare",
-        "gate": "D-10: wire format is not an artifact — plain httpx only, no vendor SDK",
+        "gate": "D-11: wire format is not an artifact — plain httpx only, no vendor SDK",
     },
 )

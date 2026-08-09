@@ -20,10 +20,10 @@ commit, evidence executed and pasted before moving to swarm/done/.
   at flow-parse time (S-15). No sleep anywhere in the runner.
 - Audit log is hash-chained tamper-evident, written before execution (S-08), with a
   verification tool.
-- Model access goes through ModelBackend only (model.py contract, D-09). Ollama
+- Model access goes through ModelBackend only (model.py contract, D-10). Ollama
   is the reference backend, not the only one. Adapters declare their
   constrained-decoding mode; anything below native degrades to validate-and-retry
-  and the run report must say so. Plain httpx, no vendor SDK (D-10: the wire
+  and the run report must say so. Plain httpx, no vendor SDK (D-11: the wire
   format is not an artifact). Model pinned by digest (S-09), temperature 0, one
   retry then abort. Measure num_ctx sufficiency against the real demo scene tree
   and record the number (S-06).
