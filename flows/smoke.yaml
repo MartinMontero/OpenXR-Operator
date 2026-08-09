@@ -1,0 +1,11 @@
+# Smoke flow: deterministic, model-disabled, T3 capture. CI flow-smoke target
+# from W3 onward. Kept minimal until the demo project lands (oxr-w-qa, W2).
+project: ./demo_project
+scene: res://scenes/main.tscn
+capture_tier: t3
+inject_tier: a3
+capabilities: []  # deny-all default; this flow is read-only
+---
+- launch: { clean: true }
+- settle: { timeout: 8000 }
+- capture: { label: "after-launch" }

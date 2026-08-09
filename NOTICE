@@ -1,0 +1,9 @@
+OpenXR Operator
+Copyright (C) 2026 The OpenXR Operator contributors
+
+Repository default licence: AGPL-3.0-or-later (LICENSE).
+addon/ and layer/ are MIT (see their LICENSE files) because they load
+in-process into user projects and must not impose copyleft on them
+(build kit v2.0 section 4.1, v3.0 Part 2).
+
+Third-party attributions are recorded here as dependencies are added.
