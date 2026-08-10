@@ -14,6 +14,9 @@ commit, evidence executed and pasted before moving to swarm/done/.
 - mypy --strict and ruff clean; pytest green.
 - Model output is data: schema-validate, capability-allowlist, diff-then-approve for
   every mutating action. No auto-apply path exists. Not behind a flag.
+- The v1 approval surface speaks plain language (D-14): every proposed mutation
+  is summarized so a non-developer can judge it; raw JSON is never the approval
+  view. Users never hand-write YAML; flows are saved artifacts of sessions.
 - Path containment per kit §6.4 minus the dead symlink check (S-04); document the
   residual TOCTOU.
 - Settle detector honours its timeout (tested, ±50ms) and rejects invalid on_timeout
