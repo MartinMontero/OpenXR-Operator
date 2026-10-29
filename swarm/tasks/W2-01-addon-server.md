@@ -1,0 +1,53 @@
+# W2-01-addon-server — Wire protocol server: auth, limits, dispatch
+
+| Field | Value |
+|---|---|
+| Wave | W2 (planes behind contracts; M1–M3) |
+| Owner | oxr-w-addon |
+| Writes | `addon/openxr_operator/server.gd`, `addon/openxr_operator/tests/` (new) |
+| Depends on | W2-01-qa-demo-project (execution harness project) |
+| Findings | F-001, F-017, F-027, S-02, S-16; audit TC-SEC-001, TC-SEC-002 |
+| Contracts | `docs/contracts/wire-protocol.md`, `addon/openxr_operator/protocol.gd` (read-only) |
+
+## Scope (RPI)
+
+Implement the game-process WebSocket server per the frozen wire contract:
+
+- Bind `127.0.0.1:9099` only. No configuration path may change the bind.
+- First frame on every connection MUST be `{"cmd":"auth","token":"<64 hex>","protocol":2}`.
+  One attempt, 2 s deadline (`AUTH_DEADLINE_MS`), close 1008 on failure,
+  constant-time compare. **Nothing dispatches pre-auth**, including error
+  messages that confirm command names.
+- Protocol mismatch closes with a clear message (F-027).
+- Limits from `protocol.gd`: 1 MiB max inbound frame (close 1009), 4 concurrent
+  peers, 50 msgs/s/peer (close 1008), 120 s idle (close 1001).
+- Commands: `ping`, `scene_tree`, `capture`, `get_property`, `set_property`,
+  `inject`, `restart_scene`, `editor_rescan`. Every request carries `id`;
+  every reply echoes it (F-017). Unknown command post-auth → explicit error
+  reply, connection stays up.
+- Token file (S-02): generate 32 random bytes as 64 hex chars at
+  `user://openxr_operator.token` if absent; write with the most restrictive
+  permissions the platform allows; document honestly what each platform does
+  and does not protect (P3-12: on Windows there is no chmod 0600 — say so).
+  Never log the token; the token must not appear in any log or artifact.
+- Auth nits documented (S-16): the docs comment in server.gd records the
+  one-attempt/2 s/close-1008 behavior as specified, no more, no less.
+
+## Mandatory tests (executed evidence required)
+
+- **TC-SEC-001 (F-001):** unauthenticated command rejected, connection closes.
+- **TC-SEC-002 (F-027):** wrong protocol version closes with a clear message.
+- W2 exit gate: 1 MiB+1 byte frame → close 1009; 51st message in one second →
+  close 1008; 5th concurrent peer rejected; idle 120 s → close 1001 (test may
+  use shortened timeouts via test-only constants, stated as such).
+
+Harness: headless self-test under `addon/openxr_operator/tests/` executed
+against the demo project (lands with W2-01-qa-demo-project). Until then the
+card stays open; parse checks (`godot --headless --check-only`, timeout-wrapped)
+run from card start.
+
+## Done when
+
+All tests above executed green, gdlint/gdformat clean, commit(s) reference
+`W2-01-addon-server` and finding ids, evidence pasted into this card, card
+moved to `swarm/done/`.

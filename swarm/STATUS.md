@@ -2,12 +2,12 @@
 
 | Role | Session title | State | Current task | Updated |
 |---|---|---|---|---|
-| orchestrator | oxr-orchestrator | W1: audit P1-01/03/05 + P2-06 fixed, P1-04 amended via D-17; exit-gate demos §5.4 done | W1 remainder: §5.1 osv-scanner, §5.2 Godot checksum, §5.3 register, §5.5 freeze | 2026-10-28 |
-| engine worker | oxr-w-addon | idle | — | — |
-| agent-core worker | oxr-w-operator | idle | — | — |
+| orchestrator | oxr-orchestrator | W2 cards written (9) | W2-01-orchestrator-adapters (P2-07/08/09, P3-10) | 2026-10-29 |
+| engine worker | oxr-w-addon | cards ready | W2-01..04-addon (server blocked on QA demo project) | 2026-10-29 |
+| agent-core worker | oxr-w-operator | cards ready | W2-01-operator-fsguard (no deps) | 2026-10-29 |
 | ui worker | oxr-w-ui | idle | — | — |
 | layer worker | oxr-w-layer | gated on D-04 | — | — |
-| qa worker | oxr-w-qa | idle | — | — |
+| qa worker | oxr-w-qa | cards ready | W2-01-qa-demo-project (first; unblocks integration tests) | 2026-10-29 |
 
 Coordination rules: exclusive file ownership per role; contract changes via
 swarm/requests/ ruled on by the orchestrator (recorded in swarm/decisions/);

@@ -20,8 +20,8 @@ or dependency.
 | Wave | Scope (kit Table 6-1) | Exit gate | Status |
 |---|---|---|---|
 | W0 | Preflight & ingest (orchestrator) | Preflight report on disk; missing tools as P0; D-04/D-05 answered | **DONE** 2026-08-11 (AUDIT.md §2; D-04/D-05 in swarm/decisions/) |
-| W1 | Repo, contracts, gates (orchestrator only); M0 + S-01, S-09, S-10, S-12, S-13 | CI green on empty codebase; vendor gate demonstrably fails when `openai` is added to the lockfile and passes when removed; tag-pinned Action demonstrably fails the digest gate | **PART** — layout/licences/contracts/CI exist from prior session; §5 lists the remainder |
-| W2 | Planes behind contracts; M1–M3 + S-02…S-07, S-16 | Unauth command closes connection; wrong version clear; 1 MiB frame rejected; 51st msg/s closes peer; non-black capture at declared tier; bogus tracker raises; traversal rejected+logged | OPEN — cards to `swarm/tasks/` |
+| W1 | Repo, contracts, gates (orchestrator only); M0 + S-01, S-09, S-10, S-12, S-13 | CI green on empty codebase; vendor gate demonstrably fails when `openai` is added to the lockfile and passes when removed; tag-pinned Action demonstrably fails the digest gate | **DONE** — closed by the human 2026-10-29, CI green |
+| W2 | Planes behind contracts; M1–M3 + S-02…S-07, S-16 | Unauth command closes connection; wrong version clear; 1 MiB frame rejected; 51st msg/s closes peer; non-black capture at declared tier; bogus tracker raises; traversal rejected+logged | OPEN — cards written 2026-10-29 (`swarm/tasks/W2-*`: 4 addon, 2 operator, 1 orchestrator, 2 QA) |
 | W3 | Flow runner; M4 | Demo flow headless in CI, model disabled, complete run bundle; no sleep; timeout ±50ms executed | OPEN |
 | W4 | Agent loop; M5 + S-08, S-09, S-11, S-14 | Mutating action cannot execute without approval record (attempted, logged); schema-violating output rejected/retried-once/aborted; sandbox unavailable ⇒ mutating flows refuse loudly; envelope measured in README | OPEN |
 | W5 | Web UI & install; M6 + S-05, S-14 | No third-party origin in any response; page works unplugged; WCAG baseline; install runbook executed from scratch | OPEN |
@@ -135,3 +135,13 @@ Object Model (D-08). Any feature of v1.0's "Extending the Kit" section.
   P3-11/P3-12 + coverage gate (SHIP checklist). W1 remainder before close:
   §5.1 osv-scanner (W0-03), §5.2 Godot zip checksum (W0-04), §5.3 dependency
   register, §5.5 freeze check.
+- 2026-10-29 — W1 closed by the human (green). W2 cards written:
+  W2-01..04-addon (server/auth+limits, capture T2/T3, inject A3+S-03,
+  debugger matrix S-07), W2-01..02-operator (fsguard S-04+TC-SEC-003,
+  driver/settle TC-SEC-004/007+S-06), W2-01-orchestrator-adapters
+  (P2-07/08/09, P3-10 — backends/ and model.py are orchestrator-owned),
+  W2-01..02-qa (demo project + gdUnit4 harness closing W0-06; contract
+  round-trip replaying the W2 exit gate). Audit TC-SEC-001/002/005/006
+  carried on the addon cards per human direction; demo project assigned
+  to QA (supersedes the P-1 role text giving demo_project/ to the addon
+  worker — reconcile at next prompt edit).
