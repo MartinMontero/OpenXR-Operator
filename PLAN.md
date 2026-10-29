@@ -31,7 +31,7 @@ or dependency.
 
 | ID | Fix (wave) | Status |
 |---|---|---|
-| S-01 digest-pinned Actions | W1 | PART — `tools/check-action-pins.sh` + gate green (dry-run CONFIRMED); failure demo outstanding (§5.4) |
+| S-01 digest-pinned Actions | W1 | DONE — both directions executed 2026-10-28 (tag-pinned scratch workflow fails RC=1; real workflows pass); failure-path diagnostic bug found by execution and fixed (BASH_REMATCH clobbered under `set -u`) |
 | S-02 token-file permissions honesty | W2 (addon) | OPEN |
 | S-03 class-name fix + `inject.gd` deliverable | W2 (addon) | OPEN |
 | S-04 dead symlink check removal; TOCTOU doc | W2 (operator) | OPEN |
@@ -78,10 +78,14 @@ re-confirmed-by-execution or UNTESTED.
    (S-13: fixes recorded downstream 2026.4.x, "verify your exact tag"
    stands); model-digest pinning scaffold for `ollama pull
    model@sha256:…` (S-09) with the CI check wired at W4.
-4. **W1 exit-gate demonstrations (executed, pasted to AUDIT.md):**
-   - vendor gate fails when `openai` is added to the lockfile, passes when
-     removed (sandboxed scratch copy, not the real lockfile);
-   - digest gate fails on a tag-pinned `uses:` line (scratch workflow file).
+4. **W1 exit-gate demonstrations — DONE 2026-10-28** (evidence in AUDIT.md §6):
+   - vendor gate fails when `openai` is added to a lockfile copy, passes
+     pristine — TC-SEC-010 (`operator/tests/test_vendorscan_gate.py`),
+     executed in pytest, both directions (P1-01);
+   - digest gate fails on a tag-pinned `uses:` line — executed on a scratch
+     workflow (`actions/checkout@v4` → RC=1, clean diagnostic); the demo
+     exposed a failure-path bug (BASH_REMATCH clobbered by the second regex
+     under `set -u`), fixed in `tools/check-action-pins.sh`.
 5. **Freeze check.** Confirm the five contracts on disk match kit §2.2
    (protocol.gd, driver.py, schema.py, flow JSON Schema, model.py+backends/);
    record freeze commit in PLAN.md history.
@@ -90,6 +94,11 @@ re-confirmed-by-execution or UNTESTED.
 
 - ANSWERED: D-02, D-04 (2026-08-11, examined defaults), D-05 (2026-08-11,
   WSL2+bwrap, smoke-tested), D-10…D-14 (prior session).
+- ANSWERED 2026-08-11 (landed 2026-10-28): D-15 (hosted_moonshot/Kimi
+  adapter, opt-in future wave; D-12/D-13 unchanged), D-16 (Blender is a v2
+  candidate; no v1 work).
+- D-17 (orchestrator ruling, 2026-10-28): contract amendment P1-04 approved —
+  observation content delimited as UNTRUSTED in `render_user_text()`.
 - Defaults adopted, explicit: D-03 (MIT addon — implemented), D-09 (4.7.1
   pinned in CI).
 - Unexamined defaults (resurface at ship time per stop points): D-01 (Linux
@@ -116,3 +125,13 @@ Object Model (D-08). Any feature of v1.0's "Extending the Kit" section.
 ## History
 
 - 2026-08-11 — W0 done; PLAN.md written; D-02/D-04/D-05 answered.
+- 2026-10-28 — External audit (swarm/requests/external-audit-2026-08-11.md)
+  remediated before W1 close: P1-01 (vendor gate scans uv.lock + tests;
+  TC-SEC-010 both directions), P1-03 (gdformat/gdlint bypasses removed),
+  P1-05 (Azure OpenAI + api.llama.com hosts denied), P2-06 (exact/leaf
+  model-id tier), P1-04 via contract amendment D-17 (TC-SEC-009). Scheduled:
+  P1-02 licence gate (W1/W2, SBOM-vs-metadata wiring decision pending),
+  P2-07/P2-08/P2-09 adapter robustness (W2), P3-10 parse guards (W2),
+  P3-11/P3-12 + coverage gate (SHIP checklist). W1 remainder before close:
+  §5.1 osv-scanner (W0-03), §5.2 Godot zip checksum (W0-04), §5.3 dependency
+  register, §5.5 freeze check.

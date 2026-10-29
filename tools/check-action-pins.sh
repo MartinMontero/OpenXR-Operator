@@ -6,9 +6,10 @@ set -euo pipefail
 fail=0
 while IFS= read -r line; do
   if [[ "$line" =~ uses:\ *([A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+)@([^[:space:]]+) ]]; then
+    action="${BASH_REMATCH[1]}"
     ref="${BASH_REMATCH[2]}"
     if [[ ! "$ref" =~ ^[0-9a-f]{40}$ ]]; then
-      echo "DIGEST-GATE FAIL: ${BASH_REMATCH[1]}@$ref is not a commit digest"
+      echo "DIGEST-GATE FAIL: $action@$ref is not a commit digest"
       fail=1
     fi
   fi

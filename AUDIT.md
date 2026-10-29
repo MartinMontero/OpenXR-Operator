@@ -136,3 +136,28 @@ Label: CONFIRMED (inventory measured); latency UNTESTED.
   workflow already pins Actions by digest and verifies the gitleaks checksum,
   but lacks osv-scanner (W0-03) and Godot-zip verification (W0-04). Recorded as
   findings, scheduled in W1.
+
+## 6. External-audit remediation (executed 2026-10-28)
+
+Source: `swarm/requests/external-audit-2026-08-11.md` (reviewed commit
+b0440d1). All affected gates re-run locally after the changes; labels per §0.2.
+
+| Finding | Fix | Executed evidence |
+|---|---|---|
+| P1-01 | vendorscan default paths now include `operator/uv.lock` and `operator/tests` | TC-SEC-010: lockfile copy + `name = "openai"` stanza → RC=1 "VENDOR-GATE FAIL"; pristine copy → RC=0. Both directions executed in pytest (16 passed). CONFIRMED |
+| P1-03 | `|| echo` fallbacks removed from gdformat/gdlint CI steps | `gdformat --check addon/` → "1 file would be left unchanged"; `gdlint addon/` → "Success: no problems found". Both rc=0 with no fallback. CONFIRMED |
+| P1-05 | FORBIDDEN_HOSTS += openai.azure.com, services.ai.azure.com, cognitiveservices.azure.com, llama.com | TC-SEC-008 + P1-05 tests: `API.OPENAI.COM`, `api.openai.com.`, `x.openai.azure.com`, `api.llama.com` all raise "permanently denied". CONFIRMED |
+| P2-06 | FORBIDDEN_MODEL_EXACT + provider-prefix leaf split; substrings += openai, chatgpt | TC-QA-011: `o1`, `openai/o1`, `o3`, `meta/llama-4-scout` rejected; `qwen2.5-vl:7b`, `gemma3:12b` pass. CONFIRMED |
+| P1-04 | Contract amendment via swarm/requests/, ruled APPROVED (D-17): `render_user_text` delimits observation as UNTRUSTED | TC-SEC-009: delimiters + warning present; hostile node name verbatim inside tags. CONFIRMED |
+| (found by execution) | Digest-gate failure path clobbered BASH_REMATCH under `set -u` — exit code was already fail-closed (RC=1), diagnostic broken | `tools/check-action-pins.sh` fixed; scratch tag-pinned workflow → "DIGEST-GATE FAIL: actions/checkout@v4 is not a commit digest", RC=1; real workflows → RC=0. CONFIRMED |
+
+W1 exit-gate demonstrations (PLAN §5.4): both now executed — vendor gate both
+directions, digest gate failure on a tag pin.
+
+Still OPEN before W1 close: §5.1 osv-scanner (W0-03), §5.2 Godot zip checksum
+(W0-04), §5.3 dependency register (S-12/S-13/S-09), §5.5 freeze check.
+
+Scheduled per audit §5 (not this wave): P1-02 licence gate (W1/W2 — SBOM vs
+importlib.metadata wiring is an orchestrator decision, to be recorded on the
+task card), P2-07/P2-08/P2-09 adapter robustness (W2), P3-10 parse guards
+(W2), coverage-gate wiring (W1/W2), P3-11/P3-12 (SHIP checklist).

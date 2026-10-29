@@ -69,5 +69,5 @@ def scan(paths: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:] or ["operator/src", "operator/pyproject.toml", "addon", "layer", "tools"]
+    args = sys.argv[1:] or ["operator/src", "operator/tests", "operator/pyproject.toml", "operator/uv.lock", "addon", "layer", "tools"]
     sys.exit(scan(args))

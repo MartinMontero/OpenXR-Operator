@@ -21,11 +21,11 @@ jobs:
       - name: Format
         run: |
           uv run --project operator ruff format --check operator/
-          uv run --project operator gdformat --check addon/ || echo "gdformat: no addon sources yet"
+          uv run --project operator gdformat --check addon/
       - name: Lint
         run: |
           uv run --project operator ruff check operator/
-          uv run --project operator gdlint addon/ || echo "gdlint: no addon sources yet"
+          uv run --project operator gdlint addon/
       - name: Types
         run: uv run --project operator mypy --strict --config-file operator/pyproject.toml operator/src
       - name: Vendor gate
