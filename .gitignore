@@ -5,3 +5,4 @@ runs/
 sbom.json
 .godot/
 *.import
+.tools/

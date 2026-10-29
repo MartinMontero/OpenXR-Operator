@@ -2,7 +2,7 @@
 
 | Role | Session title | State | Current task | Updated |
 |---|---|---|---|---|
-| orchestrator | oxr-orchestrator | awaiting start | — | — |
+| orchestrator | oxr-orchestrator | W0 done; PLAN.md written; entering W1 | W1 remainder §5 | 2026-08-11 |
 | engine worker | oxr-w-addon | idle | — | — |
 | agent-core worker | oxr-w-operator | idle | — | — |
 | ui worker | oxr-w-ui | idle | — | — |
