@@ -64,6 +64,12 @@ class LlamaCppBackend:
         image_paths: list[Path],
         schema: dict[str, Any],
     ) -> ModelResponse:
+        cap = self.capabilities()
+        if len(image_paths) > cap.max_images_per_request:  # P2-09
+            raise ModelError(
+                f"{self.backend_id}: {len(image_paths)} images exceeds "
+                f"max_images_per_request={cap.max_images_per_request}"
+            )
         parts: list[dict[str, Any]] = [
             {"type": "text", "text": render_user_text(task, scene_tree)}
         ]
@@ -93,8 +99,16 @@ class LlamaCppBackend:
             raise ModelError(f"llama-server unreachable: {exc}") from exc
         if r.status_code != 200:
             raise ModelError(f"llama-server {r.status_code}: {r.text[:400]}")
-        body = r.json()
-        content = body["choices"][0]["message"]["content"]
+        try:
+            body = r.json()
+        except ValueError as exc:
+            raise ModelError("llama-server: non-JSON HTTP body") from exc
+        try:
+            content = body["choices"][0]["message"]["content"]  # P2-08
+        except (KeyError, IndexError, TypeError) as exc:
+            raise ModelError(
+                f"llama-server: unexpected response shape: {str(body)[:400]}"
+            ) from exc
         return parse_model_response(
             content, self._model, self.backend_id, "native", time.monotonic_ns() - t0
         )

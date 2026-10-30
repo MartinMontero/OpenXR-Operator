@@ -40,3 +40,23 @@ rejected pre-parse; deep nesting → `ModelError` (not `RecursionError`).
 Tests executed green, P3-10 amendment recorded, evidence pasted, commit(s)
 reference `W2-01-orchestrator-adapters` and the finding ids, card moved to
 `swarm/done/`.
+
+## Executed evidence (2026-10-29)
+
+All local, offline, deterministic (httpx.Client monkeypatched with a stub).
+Suite: `uv run --project operator pytest -q` -> **31 passed** (15 new in
+`operator/tests/test_adapters.py`); ruff format --check, ruff check,
+mypy --strict, vendor gate all green.
+
+| Finding | Tests (all executed green) |
+|---|---|
+| P2-07 / TC-QA-012 | `test_health_true_when_pinned_model_present`, `test_health_false_when_model_absent`, `test_health_false_when_server_down`, `test_health_false_on_non_json_tags`, `test_health_defaults_to_latest_tag`, `test_health_ignores_digest_pin_for_tag_lookup` |
+| P2-09 | `test_ollama_rejects_over_limit_images` (9 > 8), `test_llamacpp_rejects_over_limit_images` (5 > 4) |
+| P2-08 | `test_llamacpp_unexpected_200_shape_is_model_error`, `test_llamacpp_non_json_body_is_model_error`, `test_ollama_non_json_body_is_model_error`, `test_ollama_non_dict_body_is_model_error` |
+| P3-10 / D-18 | `test_parse_rejects_oversize_content` (1,000,001 chars), `test_parse_deep_nesting_is_model_error_not_recursion_error` (5000-deep), `test_parse_valid_object_unchanged` |
+
+Contract handling: P3-10 touched frozen `model.py` and went through
+`swarm/requests/contract-amendment-P3-10-parse-guards.md`, ruled APPROVED,
+recorded as `swarm/decisions/D-18.md`. P2-07 aligned `health()` with the
+contract's existing "reachable and the model is available" wording - code
+changed, contract text did not.

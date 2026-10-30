@@ -2,7 +2,7 @@
 
 | Role | Session title | State | Current task | Updated |
 |---|---|---|---|---|
-| orchestrator | oxr-orchestrator | W2 cards written (9) | W2-01-orchestrator-adapters (P2-07/08/09, P3-10) | 2026-10-29 |
+| orchestrator | oxr-orchestrator | W2-01-orchestrator-adapters done (evidence in swarm/done/) | awaiting worker reports / next orchestrator task | 2026-10-29 |
 | engine worker | oxr-w-addon | cards ready | W2-01..04-addon (server blocked on QA demo project) | 2026-10-29 |
 | agent-core worker | oxr-w-operator | cards ready | W2-01-operator-fsguard (no deps) | 2026-10-29 |
 | ui worker | oxr-w-ui | idle | — | — |

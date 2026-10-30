@@ -188,10 +188,18 @@ def parse_model_response(
     """Shared response floor for every adapter: non-empty, JSON, an object."""
     if not content:
         raise ModelError("empty content from model")
+    # D-18 (P3-10): bounded size, bounded depth - this function is the
+    # shared floor for every adapter, including future hosted ones.
+    if len(content) > 1_000_000:
+        raise ModelError(
+            f"oversize content from model: {len(content)} chars (limit 1_000_000)"
+        )
     try:
         parsed = json.loads(content)
     except json.JSONDecodeError as exc:
         raise ModelError(f"non-JSON from model: {content[:400]}") from exc
+    except RecursionError as exc:
+        raise ModelError("model JSON too deeply nested") from exc
     if not isinstance(parsed, dict):
         raise ModelError("model returned JSON that is not an object")
     return ModelResponse(

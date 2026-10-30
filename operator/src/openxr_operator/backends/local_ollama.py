@@ -43,13 +43,31 @@ class OllamaBackend:
         )
 
     def health(self) -> bool:
+        # P2-07: the contract says "reachable and the model is available".
+        # Check /api/tags for the pinned model, not just server
+        # reachability, so a missing model is a clear startup error
+        # (D-13), not a mid-run 404 on the D-14 surface.
         try:
-            return (
-                self._client.get(f"{self._host}/api/tags", timeout=5.0).status_code
-                == 200
-            )
+            r = self._client.get(f"{self._host}/api/tags", timeout=5.0)
         except httpx.HTTPError:
             return False
+        if r.status_code != 200:
+            return False
+        try:
+            body = r.json()
+        except ValueError:
+            return False
+        if not isinstance(body, dict):
+            return False
+        names = {
+            str(m.get("name", ""))
+            for m in body.get("models", [])
+            if isinstance(m, dict)
+        }
+        want = self._model.split("@", 1)[0]  # digest pin (S-09) is not a tag
+        if ":" not in want:
+            want += ":latest"
+        return want in names
 
     def act(
         self,
@@ -59,6 +77,12 @@ class OllamaBackend:
         image_paths: list[Path],
         schema: dict[str, Any],
     ) -> ModelResponse:
+        cap = self.capabilities()
+        if len(image_paths) > cap.max_images_per_request:  # P2-09
+            raise ModelError(
+                f"{self.backend_id}: {len(image_paths)} images exceeds "
+                f"max_images_per_request={cap.max_images_per_request}"
+            )
         payload: dict[str, Any] = {
             "model": self._model,
             "messages": [
@@ -80,7 +104,12 @@ class OllamaBackend:
             raise ModelError(f"ollama unreachable: {exc}") from exc
         if r.status_code != 200:
             raise ModelError(f"ollama {r.status_code}: {r.text[:400]}")
-        body = r.json()
+        try:
+            body = r.json()
+        except ValueError as exc:
+            raise ModelError("ollama: non-JSON HTTP body") from exc
+        if not isinstance(body, dict):  # P2-08 class: unexpected 200 shape
+            raise ModelError(f"ollama: unexpected response shape: {str(body)[:400]}")
         content = (body.get("message") or {}).get("content", "")
         return parse_model_response(
             content,
