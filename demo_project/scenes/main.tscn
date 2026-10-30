@@ -1,31 +1,22 @@
 [gd_scene format=3 uid="uid://oxroperator_main"]
 
-[node name="Main" type="Control"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+[node name="Main" type="Node3D"]
 
 [node name="StatusLabel" type="Label" parent="."]
-layout_mode = 0
 offset_left = 16.0
 offset_top = 16.0
 offset_right = 416.0
 offset_bottom = 39.0
 text = "STATUS: IDLE"
 
-[node name="ActionButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 16.0
-offset_top = 48.0
-offset_right = 116.0
-offset_bottom = 79.0
-text = "Run"
-
 [node name="World" type="Node3D" parent="."]
 
-[node name="XROrigin" type="Node3D" parent="World"]
+[node name="XROrigin" type="XROrigin3D" parent="World" groups=["xr_origin"]]
 
-[node name="ControllerLeft" type="Node3D" parent="World/XROrigin"]
+[node name="XRCamera3D" type="XRCamera3D" parent="World/XROrigin"]
 
-[node name="ControllerRight" type="Node3D" parent="World/XROrigin"]
+[node name="ControllerLeft" type="XRController3D" parent="World/XROrigin"]
+tracker = &"left_hand"
+
+[node name="ControllerRight" type="XRController3D" parent="World/XROrigin"]
+tracker = &"right_hand"

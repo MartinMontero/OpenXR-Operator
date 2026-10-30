@@ -31,14 +31,23 @@ third-party attribution. Its MIT `LICENSE` ships in place at
 
 The kit's step predates a gdUnit4 behaviour change that QA hit by execution:
 v6.2.2 **refuses plain `--headless`** ("Headless mode is not supported!",
-abnormal exit 103) and requires `--ignoreHeadlessMode`. Requested CI step:
+abnormal exit 103) and requires `--ignoreHeadlessMode`. Two more executed findings
+(2026-10-30): v6.2.2's CI runner is **fail-fast by default**
+(`_executor.fail_fast(true)` in GdUnitTestCIRunner `_ready`; reproduced with
+a 4-test probe suite: a failing test aborts the rest of the suite), so add
+`-c` ("run the complete test set") or a red step hides later results; and
+the addon self-tests land in `addons/openxr_operator/tests/`
+(W2-01-addon-server), a second `-a`.
+
+Requested CI step (all flags executed locally):
 
 ```yaml
       - name: gdUnit4
         run: |
           godot --headless --path demo_project \
             -s addons/gdUnit4/bin/GdUnitCmdTool.gd \
-            -a addon/tests -rd reports --ignoreHeadlessMode
+            -a addon/tests -a addons/openxr_operator/tests \
+            -c -rd reports --ignoreHeadlessMode
 ```
 
 CONFIRMED by execution: `-rd` is interpreted **relative to the project path**

@@ -15,10 +15,19 @@ func test_main_scene_loads_with_known_label_text() -> void:
 
 func test_stable_node_names_present() -> void:
 	var scene: Node = auto_free(load(MAIN_SCENE).instantiate())
-	for path in ["StatusLabel", "ActionButton", "World/XROrigin",
+	for path in ["StatusLabel", "World/XROrigin", "World/XROrigin/XRCamera3D",
 			"World/XROrigin/ControllerLeft", "World/XROrigin/ControllerRight"]:
 		assert_bool(scene.has_node(path)).is_true() \
 			.append_failure_message("missing node: %s" % path)
+	# XR classes match the operator fixture (demo_scene_tree.json) and give
+	# W2-03 inject a real binding target.
+	assert_str(scene.get_node("World/XROrigin").get_class()).is_equal("XROrigin3D")
+	assert_str(scene.get_node("World/XROrigin/ControllerLeft").get_class()) \
+		.is_equal("XRController3D")
+	assert_str(scene.get_node("World/XROrigin/ControllerLeft").tracker) \
+		.is_equal("left_hand")
+	assert_str(scene.get_node("World/XROrigin/ControllerRight").tracker) \
+		.is_equal("right_hand")
 
 func test_property_is_settable() -> void:
 	var scene: Node = auto_free(load(MAIN_SCENE).instantiate())
