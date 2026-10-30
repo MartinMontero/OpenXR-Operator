@@ -35,7 +35,9 @@ def engine(tmp_path: Path):
     e.stop()
 
 
-def _runtime(engine: FakeEngine, tmp_path: Path, actions: list[dict[str, Any]]) -> UIRuntime:
+def _runtime(
+    engine: FakeEngine, tmp_path: Path, actions: list[dict[str, Any]]
+) -> UIRuntime:
     capabilities = frozenset({"set_property"})
     driver = _driver(engine, capabilities=capabilities, capture_tier="t3")
     loop = AgentLoop(
@@ -104,7 +106,9 @@ def test_approval_card_plain_language_and_approve_executes(
     engine: FakeEngine, tmp_path: Path
 ) -> None:
     client = _client(_runtime(engine, tmp_path, [SET_RED, FINISH]))
-    client.post("/task", data={"token": "secret", "task": "make it red"}, headers=ORIGIN)
+    client.post(
+        "/task", data={"token": "secret", "task": "make it red"}, headers=ORIGIN
+    )
     status = _wait_for(client, lambda s: s["pending"])
     request_id = status["pending"][0]
 
@@ -126,7 +130,9 @@ def test_approval_card_plain_language_and_approve_executes(
 
 def test_reject_never_reaches_engine(engine: FakeEngine, tmp_path: Path) -> None:
     client = _client(_runtime(engine, tmp_path, [SET_RED, FINISH]))
-    client.post("/task", data={"token": "secret", "task": "make it red"}, headers=ORIGIN)
+    client.post(
+        "/task", data={"token": "secret", "task": "make it red"}, headers=ORIGIN
+    )
     status = _wait_for(client, lambda s: s["pending"])
     client.post(
         "/approve",
