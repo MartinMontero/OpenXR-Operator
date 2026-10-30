@@ -100,7 +100,9 @@ def safe_target(project_root: str | Path, relative_path: str) -> Path:
         _reject("escapes project root", relative_path, project_root)
     suffix = target.suffix.lower()
     if suffix not in ALLOWED_SUFFIXES:
-        _reject(f"suffix not allowed ({suffix or '<none>'})", relative_path, project_root)
+        _reject(
+            f"suffix not allowed ({suffix or '<none>'})", relative_path, project_root
+        )
     return target
 
 
