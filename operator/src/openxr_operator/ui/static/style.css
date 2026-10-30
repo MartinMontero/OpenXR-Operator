@@ -1,0 +1,35 @@
+:root { color-scheme: light dark; }
+body { font-family: system-ui, sans-serif; margin: 0; line-height: 1.5; }
+main { max-width: 44rem; margin: 2rem auto; padding: 0 1rem; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.1rem; margin-top: 2rem; }
+.state .spinner {
+  display: inline-block; width: .8em; height: .8em; margin-left: .5em;
+  border: 2px solid #888; border-top-color: transparent; border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+label { display: block; margin-bottom: .3rem; font-weight: 600; }
+textarea {
+  width: 100%; box-sizing: border-box; padding: .5rem;
+  border: 1px solid #999; border-radius: 6px; font: inherit;
+}
+button {
+  margin-top: .6rem; padding: .55rem 1.2rem; font: inherit; font-weight: 600;
+  border: 1px solid #777; border-radius: 6px; background: #eee; color: #111;
+  cursor: pointer;
+}
+button.approve { background: #146c2e; color: #fff; border-color: #146c2e; }
+button.reject { background: #8c1d18; color: #fff; border-color: #8c1d18; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, textarea:focus-visible, a:focus-visible {
+  outline: 3px solid #2563eb; outline-offset: 2px;
+}
+.actions { display: flex; gap: .75rem; }
+.card {
+  border: 1px solid #999; border-radius: 8px; padding: 1rem; margin-top: 1rem;
+}
+.card h3 { margin-top: 0; }
+.rationale { color: #6b7280; }
+.error { color: #b91c1c; font-weight: 600; }
+.muted { color: #6b7280; }

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="3">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenXR Operator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', token=token) }}">
+</head>
+<body>
+  <main>
+    <h1>OpenXR Operator</h1>
+    <p class="state" role="status">
+      State: <strong>{{ status.state }}</strong>
+      {% if status.state == "running" %}<span class="spinner" aria-label="running"></span>{% endif %}
+    </p>
+
+    <section aria-labelledby="task-heading">
+      <h2 id="task-heading">Describe what you want to build</h2>
+      <form method="post" action="{{ url_for('start_task') }}">
+        <input type="hidden" name="token" value="{{ token }}">
+        <label for="task">Your task</label>
+        <textarea id="task" name="task" rows="3"
+          placeholder="e.g. Make the status label red">{{ status.task }}</textarea>
+        <button type="submit" {% if status.state == "running" %}disabled{% endif %}>
+          Start task
+        </button>
+      </form>
+    </section>
+
+    {% if pending %}
+    <section aria-labelledby="approval-heading">
+      <h2 id="approval-heading">Needs your approval</h2>
+      {% for req in pending %}
+      <article class="card">
+        <h3>{{ req.diff.title }}</h3>
+        <ul>
+          {% for line in req.diff.lines %}<li>{{ line }}</li>{% endfor %}
+        </ul>
+        <p class="rationale">
+          Why the agent says it wants to do this (its words, not verified):
+          <em>{{ req.diff.rationale or "(none given)" }}</em>
+        </p>
+        <div class="actions">
+          <form method="post" action="{{ url_for('approve') }}">
+            <input type="hidden" name="token" value="{{ token }}">
+            <input type="hidden" name="id" value="{{ req.id }}">
+            <input type="hidden" name="approved" value="1">
+            <button class="approve" type="submit">Approve</button>
+          </form>
+          <form method="post" action="{{ url_for('approve') }}">
+            <input type="hidden" name="token" value="{{ token }}">
+            <input type="hidden" name="id" value="{{ req.id }}">
+            <input type="hidden" name="approved" value="0">
+            <button class="reject" type="submit">Reject</button>
+          </form>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Result</h2>
+      {% if status.state == "error" %}
+        <p class="error" role="alert">Something went wrong: {{ status.error }}</p>
+      {% elif status.summary %}
+        <p>{{ status.summary }}</p>
+      {% elif status.state == "running" %}
+        <p class="muted">Working… approvals will appear here when the agent proposes a change.</p>
+      {% else %}
+        <p class="muted">No task yet. Describe what you want above.</p>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>
