@@ -59,6 +59,29 @@ returned rc=0 in both the pass and the refuse cases, so CI should also grep
 the report/log — recommend `findstr`/grep for `Overall Summary:.*0 failures`
 or parse `reports/report_*/results.xml`, rather than trusting `$?` alone.
 
+## 2b. CI render suite (W2-02-addon-capture) — display + audio requirements
+
+`addon/openxr_operator/tests_render/` exercises real viewport readback
+(TC-SEC-005). Executed findings from bringing it up on Windows (2026-10-30):
+
+- It CANNOT run headless: the dummy RenderingServer produces no frames.
+  CI needs `xvfb-run -a` for this suite (same pattern as the kit's
+  flow-smoke job).
+- It needs `--audio-driver Dummy` on hosts without an audio device: without
+  it, WASAPI init errors stall the main loop and tests time out (executed).
+- gdUnit4's GdUnitCmdTool minimizes its window at startup; the suite
+  restores it in before() and fails LOUDLY with a named environment error
+  if the host cannot present a frame (no silent skips).
+
+Requested CI addition (flags executed locally, xvfb itself UNTESTED here —
+Windows host):
+
+```yaml
+      - name: gdUnit4 render suite (capture)
+        run: |
+          xvfb-run -a godot --path demo_project --audio-driver Dummy             -s addons/gdUnit4/bin/GdUnitCmdTool.gd             -a addons/openxr_operator/tests_render -c -rd reports-render
+```
+
 ## 3. Scheduling gap: `addon/openxr_operator/plugin.gd` has no owner
 
 `plugin.cfg` declares `script="plugin.gd"`; `plugin.gd` does not exist on main

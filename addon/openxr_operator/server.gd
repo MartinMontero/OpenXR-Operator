@@ -52,6 +52,10 @@ var _token := ""
 ## Extra command handlers registered by sibling modules (capture, inject,
 ## editor bridge). cmd -> Callable(msg: Dictionary) -> Dictionary reply body.
 var _handlers: Dictionary = {}
+# Dispatch serialization (see _enqueue_dispatch): async handlers must not
+# interleave replies.
+var _queue: Array = []
+var _draining := false
 
 
 class _Peer:
@@ -190,7 +194,7 @@ func _on_packet(peer: _Peer, pkt: PackedByteArray, now: int) -> void:
 	if not peer.authed:
 		_handle_pre_auth(peer, msg)
 		return
-	_dispatch(peer, msg)
+	_enqueue_dispatch(peer, msg)
 
 
 # -- auth (S-16: exactly this, no more, no less) -------------------------------
@@ -245,7 +249,23 @@ func _constant_time_equal(a: String, b: String) -> bool:
 # -- dispatch (post-auth only) -------------------------------------------------
 
 
-func _dispatch(peer: _Peer, msg: Dictionary) -> void:
+func _enqueue_dispatch(peer: _Peer, msg: Dictionary) -> void:
+	_queue.append([peer, msg])
+	if not _draining:
+		Callable(self, "_drain_queue").call()
+
+
+func _drain_queue() -> void:
+	_draining = true
+	while not _queue.is_empty():
+		var item: Array = _queue.pop_front()
+		await _execute(item[0], item[1])
+	_draining = false
+
+
+func _execute(peer: _Peer, msg: Dictionary) -> void:
+	if peer.ws.get_ready_state() != WebSocketPeer.STATE_OPEN:
+		return  # peer is gone; its close is handled by the poll loop
 	var cmd := str(msg.get("cmd"))
 	match cmd:
 		"ping":
@@ -264,8 +284,21 @@ func _dispatch(peer: _Peer, msg: Dictionary) -> void:
 			_close(peer, CLOSE_POLICY_VIOLATION, "one auth attempt")
 		_:
 			if _handlers.has(cmd):
-				var body: Dictionary = _handlers[cmd].call(msg) as Dictionary
-				_reply(peer, msg, body)
+				# Handlers may be coroutines (capture); plain Dictionaries
+				# pass through await unchanged.
+				@warning_ignore("redundant_await")
+				var body: Variant = await _handlers[cmd].call(msg)
+				if body is Dictionary:
+					_reply(peer, msg, body)
+				else:
+					_reply(
+						peer,
+						msg,
+						{
+							"ok": false,
+							"error": "handler for %s returned no reply" % cmd,
+						}
+					)
 			else:
 				_reply(
 					peer,
