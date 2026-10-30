@@ -6,7 +6,12 @@ import logging
 
 import pytest
 
-from openxr_operator.approval import ApprovalGate, PlainLanguageDiff, render_card, summarize
+from openxr_operator.approval import (
+    ApprovalGate,
+    PlainLanguageDiff,
+    render_card,
+    summarize,
+)
 
 
 def _set_property() -> dict:
@@ -50,8 +55,18 @@ def test_gate_rejection_recorded_with_diff(caplog: pytest.LogCaptureFixture) -> 
 @pytest.mark.parametrize(
     "action",
     [
-        {"action": "write_code", "rationale": "r", "file_path": "a.gd", "code": "x\ny\n"},
-        {"action": "assign_script", "rationale": "r", "path": "/root/A", "script_path": "a.gd"},
+        {
+            "action": "write_code",
+            "rationale": "r",
+            "file_path": "a.gd",
+            "code": "x\ny\n",
+        },
+        {
+            "action": "assign_script",
+            "rationale": "r",
+            "path": "/root/A",
+            "script_path": "a.gd",
+        },
         {
             "action": "move_controller",
             "rationale": "r",
@@ -59,7 +74,13 @@ def test_gate_rejection_recorded_with_diff(caplog: pytest.LogCaptureFixture) -> 
             "position": [0, 1, 0],
             "rotation": [0, 0, 0, 1],
         },
-        {"action": "press", "rationale": "r", "hand": "left", "action_name": "grab", "float_value": 1.0},
+        {
+            "action": "press",
+            "rationale": "r",
+            "hand": "left",
+            "action_name": "grab",
+            "float_value": 1.0,
+        },
         {"action": "restart_scene", "rationale": "r"},
     ],
 )
