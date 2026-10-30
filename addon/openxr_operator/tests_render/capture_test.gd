@@ -24,21 +24,6 @@ func before() -> void:
 	# Windowed runs on this host can open occluded/minimized; an
 	# unpresented window never emits frame_post_draw. Ask for foreground.
 	DisplayServer.window_move_to_foreground()
-	# Windowed runs on this host can open occluded/minimized; an
-	# unpresented window never emits frame_post_draw. Ask for foreground.
-	DisplayServer.window_move_to_foreground()
-	# Windowed runs on this host can open occluded/minimized; an
-	# unpresented window never emits frame_post_draw. Ask for foreground.
-	DisplayServer.window_move_to_foreground()
-	# Windowed runs on this host can open occluded/minimized; an
-	# unpresented window never emits frame_post_draw. Ask for foreground.
-	DisplayServer.window_move_to_foreground()
-	# Windowed runs on this host can open occluded/minimized; an
-	# unpresented window never emits frame_post_draw. Ask for foreground.
-	DisplayServer.window_move_to_foreground()
-	# Windowed runs on this host can open occluded/minimized; an
-	# unpresented window never emits frame_post_draw. Ask for foreground.
-	DisplayServer.window_move_to_foreground()
 	# GdUnitCmdTool._initialize() MINIMIZES the window; a minimized window is
 	# never presented and RenderingServer.frame_post_draw never fires
 	# (executed finding, 2026-10-30). This suite exists to exercise real
@@ -56,8 +41,9 @@ func before() -> void:
 	_capture.frame_timeout_ms = 180000
 	# Warm-up: confirm the host actually presents before any capture test
 	# runs; if it cannot, fail HERE with a named environment error instead of
-	# mysteriously inside a capture test.
-	var fired := [false]  # array cell: lambdas capture locals by value
+	# mysteriously inside a capture test. (The flag rides in an array cell:
+	# GDScript lambdas capture locals by value.)
+	var fired := [false]
 	var cb := func() -> void: fired[0] = true
 	RenderingServer.frame_post_draw.connect(cb, CONNECT_ONE_SHOT)
 	var start := Time.get_ticks_msec()
