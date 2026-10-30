@@ -72,7 +72,9 @@ def test_settle_on_timeout_validated_at_parse_time_s15() -> None:
 
 def test_mutating_command_requires_capability() -> None:
     with pytest.raises(FlowRejected, match="capabilities"):
-        parse_flow("project: p\nscene: s\n---\n- press: { hand: right, action: grab, value: 1.0 }\n")
+        parse_flow(
+            "project: p\nscene: s\n---\n- press: { hand: right, action: grab, value: 1.0 }\n"
+        )
 
 
 def test_nested_repeat_commands_validated() -> None:
@@ -106,4 +108,6 @@ def test_repeat_requires_commands() -> None:
 
 def test_run_flow_requires_file() -> None:
     with pytest.raises(FlowRejected, match="run_flow"):
-        parse_flow("project: p\nscene: s\n---\n- run_flow: { when: { platform: linux } }\n")
+        parse_flow(
+            "project: p\nscene: s\n---\n- run_flow: { when: { platform: linux } }\n"
+        )

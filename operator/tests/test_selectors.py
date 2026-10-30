@@ -16,7 +16,9 @@ from openxr_operator.selectors import (
 )
 
 TREE = _tree_from_dict(
-    json.loads((Path(__file__).parent / "fixtures" / "demo_scene_tree.json").read_text())
+    json.loads(
+        (Path(__file__).parent / "fixtures" / "demo_scene_tree.json").read_text()
+    )
 )
 
 
@@ -58,7 +60,9 @@ def test_class_path_group_visible_attributes() -> None:
 
 
 def test_child_of_and_contains() -> None:
-    cam = resolve_selector(TREE, {"class": "XRCamera3D", "child_of": {"group": "xr_origin"}})
+    cam = resolve_selector(
+        TREE, {"class": "XRCamera3D", "child_of": {"group": "xr_origin"}}
+    )
     assert cam is not None
     with pytest.raises(SelectorError, match="zero matches"):
         # StatusLabel is a sibling of World, not a descendant.
