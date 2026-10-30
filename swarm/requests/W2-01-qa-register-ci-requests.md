@@ -82,6 +82,30 @@ Windows host):
           xvfb-run -a godot --path demo_project --audio-driver Dummy             -s addons/gdUnit4/bin/GdUnitCmdTool.gd             -a addons/openxr_operator/tests_render -c -rd reports-render
 ```
 
+## 2c. ci.yml parse step needs project context (root-caused on Linux Godot 4.7.1, 2026-10-30)
+
+The static job's GDScript parse step runs `--check-only` from the repo root with
+no project context, so `res://addons/...` preloads don't resolve. Root-caused on
+real Linux Godot 4.7.1 by the orchestrator session; the fix below was verified
+there and re-verified on this Windows host (full addon sweep: every `.gd` under
+`addon/openxr_operator/` parses clean via `--path demo_project --check-only`,
+after `--import`; log `runs/w2-ci-parse/`). Requested replacement:
+
+```yaml
+      - name: Import demo project (class cache for parse)
+        run: timeout 120 godot --headless --path demo_project --import
+      - name: GDScript parse check
+        run: |
+          find addon -name '*.gd' -print0 | while IFS= read -r -d '' f; do
+            timeout 60 godot --headless --path demo_project --check-only --script "$(realpath "$f")" \
+              || { echo "::error file=$f::parse failed"; exit 1; }
+          done
+```
+
+The addon-side companion fixes (Variant-inference lines that `--check-only`
+escalates to errors) landed in the addon commit referenced below — server.gd
+constant-time compare and two test declarations are now explicitly typed.
+
 ## 3. Scheduling gap: `addon/openxr_operator/plugin.gd` has no owner
 
 `plugin.cfg` declares `script="plugin.gd"`; `plugin.gd` does not exist on main

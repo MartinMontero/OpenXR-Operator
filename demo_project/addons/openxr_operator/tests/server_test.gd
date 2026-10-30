@@ -238,7 +238,7 @@ func _with_main_scene() -> Node:
 
 
 func test_scene_tree_reports_demo_nodes() -> void:
-	var main := auto_free(_with_main_scene())
+	var main: Node = auto_free(_with_main_scene())
 	var c := await _connect_client()
 	await _auth(c)
 	_send(c, {"cmd": "scene_tree", "id": 2, "root": "/root/Main", "depth": 6})
@@ -255,7 +255,7 @@ func test_scene_tree_reports_demo_nodes() -> void:
 
 
 func test_get_and_set_property_roundtrip() -> void:
-	var main := auto_free(_with_main_scene())
+	var main: Node = auto_free(_with_main_scene())
 	var c := await _connect_client()
 	await _auth(c)
 	_send(

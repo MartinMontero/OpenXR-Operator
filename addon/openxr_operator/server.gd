@@ -236,7 +236,7 @@ func _handle_pre_auth(peer: _Peer, msg: Dictionary) -> void:
 func _constant_time_equal(a: String, b: String) -> bool:
 	# Fixed-work compare: every byte of both inputs is visited; the loop does
 	# not exit early on a mismatch.
-	var diff := abs(a.length() - b.length())
+	var diff: int = abs(a.length() - b.length())
 	var n: int = maxi(a.length(), b.length())
 	for i in n:
 		diff |= (
