@@ -1,6 +1,9 @@
-[gd_scene format=3 uid="uid://oxroperator_main"]
+[gd_scene load_steps=2 format=3 uid="uid://oxroperator_main"]
+
+[ext_resource type="Script" path="res://oxr_harness.gd" id="1_harness"]
 
 [node name="Main" type="Node3D"]
+script = ExtResource("1_harness")
 
 [node name="StatusLabel" type="Label" parent="."]
 offset_left = 16.0

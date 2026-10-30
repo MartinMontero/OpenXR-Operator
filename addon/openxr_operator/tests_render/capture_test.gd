@@ -33,6 +33,9 @@ func before() -> void:
 	# Windowed runs on this host can open occluded/minimized; an
 	# unpresented window never emits frame_post_draw. Ask for foreground.
 	DisplayServer.window_move_to_foreground()
+	# Windowed runs on this host can open occluded/minimized; an
+	# unpresented window never emits frame_post_draw. Ask for foreground.
+	DisplayServer.window_move_to_foreground()
 	# GdUnitCmdTool._initialize() MINIMIZES the window; a minimized window is
 	# never presented and RenderingServer.frame_post_draw never fires
 	# (executed finding, 2026-10-30). This suite exists to exercise real
