@@ -44,3 +44,39 @@ Land the minimal executable Godot project the whole wave tests against:
 Demo project loads headless in CI-equivalent local execution, W0-06 evidence
 pasted, register/CI escalations filed, commit(s) reference
 `W2-01-qa-demo-project` and finding ids, card moved to `swarm/done/`.
+
+## Executed evidence (oxr-w-qa, 2026-10-29) — DONE
+
+Environment: Windows 11, Godot 4.7.1.stable.official.a13da4feb, gdUnit4
+v6.2.2 @ 0127a55f4543dfc24746f6e5c7ba6f94105d51f2 (MIT, zip SHA-256
+58a391b0c85cbbcf7aeb09b718c8173793d45ab511950cd65eec0183aabf0e50).
+
+- Landed: demo_project/ (project.godot, scenes/main.tscn, scenes/black.tscn,
+  addon/tests/demo_harness_test.gd, INSTALL.md, VENDORED.md);
+  addons/openxr_operator installed per mapping; addons/gdUnit4 vendored.
+  Scenes provide: StatusLabel text "STATUS: IDLE" (assert_visible,
+  get_property), stable names World/XROrigin/Controller{Left,Right}
+  (scene_tree), settable Label.text (set_property), black ColorRect fixture
+  (TC-SEC-005).
+- Headless import: `godot --headless --path demo_project --import` rc=0
+  (runs/w2-01/01-import.log). Two non-fatal ERROR lines: plugin.gd absent
+  (CONFIRMED gap — addon skeleton has no plugin.gd; escalated).
+- Scene loads: main.tscn rc=0 (02-scene-load.log), black.tscn rc=0
+  (03-black-scene-load.log).
+- W0-06 gdUnit4 dry-run EXECUTED: 4/4 test cases PASSED, 0 errors/failures/
+  orphans, gdUnit4 exit code 0 (04-gdunit4-dry-run.log,
+  gdunit4-reports/report_1/). CONFIRMED: v6.2.2 refuses plain --headless
+  (exit 103); --ignoreHeadlessMode required — CI snippet fix escalated.
+- flows/smoke.yaml parse (model-disabled, T3): PASS rc=0, header/tiers/
+  vocabulary valid, project+scene resolve (05-smoke-parse.log). Steps not
+  runnable yet (named, not skipped): launch/settle/capture await
+  W2-01-addon-server and W2-02-operator-driver.
+- Operator regression: pytest 52/52 passed (06-pytest.log).
+- Full ledger: VERIFICATION.md (loop 2026-10-29).
+- Escalations filed: swarm/requests/W2-01-qa-register-ci-requests.md
+  (S-12 register row + NOTICE line, CI gdUnit4 step with --ignoreHeadlessMode,
+  plugin.gd scheduling gap, W0-06 relabel EXECUTED).
+
+Findings referenced: W0-06 (closed by execution), W0-07 (gdUnit4 version per
+kit satisfied: v6.2.2 >= 6.2.0), S-05 (mapping part proven; runbook is W5),
+S-12 (register entry escalated — register file does not exist on main).
