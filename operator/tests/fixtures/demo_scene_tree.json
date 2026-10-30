@@ -1,0 +1,69 @@
+{
+  "name": "root",
+  "class": "Node",
+  "path": "/root",
+  "visible": true,
+  "groups": [],
+  "children": [
+    {
+      "name": "Main",
+      "class": "Node3D",
+      "path": "/root/Main",
+      "visible": true,
+      "groups": [],
+      "children": [
+        {
+          "name": "StatusLabel",
+          "class": "Label",
+          "path": "/root/Main/StatusLabel",
+          "visible": true,
+          "groups": [],
+          "text": "STATUS: IDLE",
+          "children": []
+        },
+        {
+          "name": "World",
+          "class": "Node3D",
+          "path": "/root/Main/World",
+          "visible": true,
+          "groups": [],
+          "children": [
+            {
+              "name": "XROrigin",
+              "class": "XROrigin3D",
+              "path": "/root/Main/World/XROrigin",
+              "visible": true,
+              "groups": ["xr_origin"],
+              "children": [
+                {
+                  "name": "XRCamera3D",
+                  "class": "XRCamera3D",
+                  "path": "/root/Main/World/XROrigin/XRCamera3D",
+                  "visible": true,
+                  "groups": [],
+                  "children": []
+                },
+                {
+                  "name": "ControllerLeft",
+                  "class": "XRController3D",
+                  "path": "/root/Main/World/XROrigin/ControllerLeft",
+                  "visible": true,
+                  "groups": [],
+                  "children": []
+                },
+                {
+                  "name": "ControllerRight",
+                  "class": "XRController3D",
+                  "path": "/root/Main/World/XROrigin/ControllerRight",
+                  "visible": true,
+                  "groups": [],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

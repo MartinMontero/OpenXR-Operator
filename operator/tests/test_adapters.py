@@ -7,6 +7,7 @@ case is deterministic and offline.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -158,9 +159,24 @@ def test_parse_rejects_oversize_content() -> None:
 
 
 def test_parse_deep_nesting_is_model_error_not_recursion_error() -> None:
-    deep = "[" * 5000 + "]" * 5000
-    with pytest.raises(ModelError, match="too deeply nested"):
+    # Interpreter-independent: CPython's scanner raises RecursionError at
+    # different depths by build (3.13 win: 5k; 3.12 linux: >5k, <50k). Either
+    # way the caller must see ModelError, never a raw RecursionError.
+    deep = "[" * 50_000 + "]" * 50_000
+    with pytest.raises(ModelError):
         parse_model_response(deep, "m", "b", "native", 0)
+
+
+def test_parse_recursion_error_is_mapped_to_model_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Deterministic guard check: force the parser failure itself.
+    def _boom(_s: str) -> object:
+        raise RecursionError
+
+    monkeypatch.setattr(json, "loads", _boom)
+    with pytest.raises(ModelError, match="too deeply nested"):
+        parse_model_response("{}", "m", "b", "native", 0)
 
 
 def test_parse_valid_object_unchanged() -> None:
