@@ -31,8 +31,28 @@ fallback (D-13). All model access goes through the ModelBackend contract
 **Build orchestration:** see `swarm/STATUS.md` and `docs/prompts/`.
 
 ## Status
-Design audited and swarm-ready; implementation not started.
+MVP implementation complete and unit-tested (123 tests green, plus the
+gdUnit4 addon suites): authenticated addon, driver, flow runner, agent loop
+with plain-language approvals, hash-chained audit log, and the loopback web
+UI. See `SHIP.md` for the evidence list and what is still UNTESTED.
 See `CHANGELOG.md` and the decision register (build kit Part 8).
+
+## Quickstart (local, no cloud)
+Requirements: Godot 4.7.1, Python 3.11+, uv, Ollama with `qwen2.5vl:7b`.
+
+1. Install the addon: copy `addon/openxr_operator/` into
+   `<your-project>/addons/openxr_operator/`, enable the plugin in Godot, and
+   run your project once. It writes the engine token to
+   `user://openxr_operator.token`.
+2. `uv sync --project operator`
+3. Start Ollama (the default local model is `qwen2.5vl:7b`).
+4. `uv run --project operator openxr-operator ui --project <your-project> --token-file <path-to-engine-token> [--godot <godot-binary>]`
+5. Open the printed URL (`http://127.0.0.1:5000/?token=...`). Describe what
+   you want; approve or reject each plain-language card. Nothing executes
+   without your approval.
+
+Deterministic flows (no model contacted):
+`uv run --project operator openxr-operator run flows/smoke.yaml --token-file <path-to-engine-token>`
 
 ## Layout
 | Path | Licence | Contents |
