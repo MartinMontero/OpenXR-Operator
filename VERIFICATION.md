@@ -62,3 +62,18 @@ tree into a `git add -A`-style commit mid-verification
 (`git show 8cfc4e2 --stat`). Content is bit-identical to the verified state;
 no rework needed. Flagged in
 `swarm/requests/W2-01-qa-register-ci-requests.md` item 4.
+
+## Loop 2026-10-30 (evening) — W4 UI smoke with digest-pinned model (S-09)
+
+| # | Check | Command | Result | Evidence |
+|---|---|---|---|---|
+| 1 | Model pull | `ollama pull qwen2.5vl:7b` | CONFIRMED: pulled 6.0 GB, present in `ollama list` (ID 5ced39dfa4ba) | `runs/ollama-pull.log` |
+| 2 | S-09 digest pin | `GET /api/tags` | CONFIRMED: digest `5ced39dfa4bac325dc183dd1e4febaa1c46b3ea28bce48896c8e69c1e79611cc` (ID matches first 12 chars). Pin form: `qwen2.5vl:7b@sha256:5ced39dfa4bac325dc183dd1e4febaa1c46b3ea28bce48896c8e69c1e79611cc` | `runs/w4-ui/api-tags.json` |
+| 3 | Demo engine + harness | `godot --path demo_project --audio-driver Dummy --oxr-harness` (windowed) | CONFIRMED: server bound 127.0.0.1:9099; Python client auth ok, scene_tree returned Main/StatusLabel/World, ping ok | `runs/w4-ui/engine_check.py` output (session log) |
+| 4 | UI end-to-end (D-14 path) | `openxr-operator ui --project demo_project --token-file <engine token> --godot <godot exe>` | **CONFIRMED**: token gate 401/401/200, Origin gate 403, task accepted, approval card rendered plain-language (saved HTML: 'Change a property in your scene — Node: /root/Main/StatusLabel — Set text to: STATUS: RED', rationale labelled 'its words, not verified', no raw JSON — one probe heuristic false-fired on CSS class names, resolved by inspection), human approve → engine executed set_property → independent wire readback returned `STATUS: RED`; hash-chained audit records approval (approver=human) + execution + step-2 validation rejections; step-2 model output failed schema twice → aborted (kit §2.8 path working as designed) | `runs/w4-ui/ui3.log`, `drive_ui.py` output, `approval-card.html`, `audit-tail.jsonl` |
+| 5 | S-09 digest addressing (executed) | ollama 0.40.7 `/api/chat` probes | CONFIRMED: `model@sha256:<digest>` → 400 invalid model name (chat AND /api/show); `model@<id12>` → 400; **bare digest ID `5ced39dfa4ba` → 200 works** (content-addressed), but adapter `health()` then fails (checks `id:latest` tag) — pin enforcement needs adapter support, escalated. Tonight's run used the tag with the digest verified against `/api/tags` immediately before the run | `runs/w4-ui/ollama_digest_probe.py`, `verify_pin.py` (pin match: True) |
+| 6 | Token hygiene | — | temp copy `runs/w4-ui/engine.token` deleted after the run; engine token never logged | — |
+
+S-09 register note: `docs/dependency-register.md` is orchestrator-owned and still
+absent; the model digest row is escalated via
+`swarm/requests/W2-01-qa-register-ci-requests.md`.

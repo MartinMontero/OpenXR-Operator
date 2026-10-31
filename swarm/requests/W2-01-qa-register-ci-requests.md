@@ -16,6 +16,7 @@ the orchestrator. Once it exists, the executed row for gdUnit4 is:
 
 | Dependency | Version | Licence | AGPL-compatible | Vendor gate | Pin |
 |---|---|---|---|---|---|
+| qwen2.5vl:7b (Ollama model, runtime not Python) | digest-pinned 2026-10-30 (S-09) | Apache-2.0 (Qwen weights licence varies by model — verify at register time) | n/a (runtime model, not a vendored dependency) | n/a | `qwen2.5vl:7b@sha256:5ced39dfa4bac325dc183dd1e4febaa1c46b3ea28bce48896c8e69c1e79611cc` (pulled + digest read from `/api/tags`, `runs/w4-ui/api-tags.json`) |
 | gdUnit4 | v6.2.2 (≥ 6.2.0 per S-12/W0-07) | MIT | Yes | Pass | commit `0127a55f4543dfc24746f6e5c7ba6f94105d51f2`, zip SHA-256 `58a391b0c85cbbcf7aeb09b718c8173793d45ab511950cd65eec0183aabf0e50` |
 
 Upstream moved: `MikeSchulze/gdUnit4` now redirects to
@@ -105,6 +106,23 @@ after `--import`; log `runs/w2-ci-parse/`). Requested replacement:
 The addon-side companion fixes (Variant-inference lines that `--check-only`
 escalates to errors) landed in the addon commit referenced below — server.gd
 constant-time compare and two test declarations are now explicitly typed.
+
+## 2d. S-09 model digest pinning — adapter gap (executed 2026-10-30, ollama 0.40.7)
+
+Ollama 0.40.7 rejects `model@sha256:<digest>` on `/api/chat` AND `/api/show`
+(400 "invalid model name"; executed probe `runs/w4-ui/ollama_digest_probe.py`).
+The bare digest ID (`5ced39dfa4ba`) IS accepted by `/api/chat`
+(content-addressed — the strongest pin form), but the adapter's `health()`
+then fails because it checks for tag `<id>:latest`. So today there is no
+adapter-supported way to run pinned: tag works but isn't pinned; digest-id is
+pinned but fails health.
+
+Request (operator zone): make `health()` digest-aware — when the configured
+model carries a pin (`@sha256:…` or bare 12-hex), compare `/api/tags`
+digest(s) for the matching tag/ID against the pin and fail closed on
+mismatch; send the tag (or the working digest-ID form) on `/api/chat`. Until
+then the digest is verified out-of-band (see VERIFICATION.md loop 2026-10-30
+evening, check 5) — honest but manual.
 
 ## 3. Scheduling gap: `addon/openxr_operator/plugin.gd` has no owner
 
