@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import secrets
 import sys
 from pathlib import Path
@@ -129,7 +130,8 @@ def _run_ui(args: argparse.Namespace) -> int:
         project_root=Path(args.project).resolve(),
         capabilities=capabilities,
     )
-    ui_token = secrets.token_hex(16)
+    # Operator-chosen token via env (stable across restarts), else random.
+    ui_token = os.environ.get("OPENXROP_UI_TOKEN") or secrets.token_hex(16)
     print("OpenXR Operator UI (loopback only). Open this URL in your browser:")
     print(f"  http://127.0.0.1:{args.ui_port}/?token={ui_token}")
     print("Keep this token private. Ctrl-C stops the server.")
