@@ -98,12 +98,14 @@ def test_health_defaults_to_latest_tag(monkeypatch: pytest.MonkeyPatch) -> None:
     assert _ollama(monkeypatch, resp, model="qwen2.5vl").health() is True
 
 
-def test_health_ignores_digest_pin_for_tag_lookup(
+def test_health_digest_pin_enforced_when_tags_lack_digest(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # S-09 (item 2d): the pin is enforced in-process now. A tag entry with no
+    # matching digest fails closed; it never silently falls back to the tag.
     resp = _Resp(payload={"models": [{"name": "qwen2.5vl:7b"}]})
     b = _ollama(monkeypatch, resp, model="qwen2.5vl:7b@sha256:" + "0" * 64)
-    assert b.health() is True
+    assert b.health() is False
 
 
 # --- P2-09: declared max_images_per_request is enforced ----------------------
@@ -182,3 +184,63 @@ def test_parse_recursion_error_is_mapped_to_model_error(
 def test_parse_valid_object_unchanged() -> None:
     r = parse_model_response('{"a": 1}', "m", "b", "native", 0)
     assert r.parsed == {"a": 1}
+
+
+# --- S-09 / item 2d: digest-pinned model resolution ---------------------------
+
+
+def test_resolve_tag_appends_latest() -> None:
+    from openxr_operator.backends.local_ollama import _resolve_model_id
+
+    assert _resolve_model_id("qwen2.5vl") == ("qwen2.5vl:latest", None)
+    assert _resolve_model_id("qwen2.5vl:7b") == ("qwen2.5vl:7b", None)
+
+
+def test_resolve_digest_pin_translates_to_digest_id() -> None:
+    from openxr_operator.backends.local_ollama import _resolve_model_id
+
+    digest = "a" * 64
+    request_model, full = _resolve_model_id(f"qwen2.5vl:7b@sha256:{digest}")
+    assert request_model == "a" * 12  # content-addressed id, not name@sha256
+    assert full == digest
+
+
+def test_resolve_bare_digest_id_passthrough() -> None:
+    from openxr_operator.backends.local_ollama import _resolve_model_id
+
+    assert _resolve_model_id("5ced39dfa4ba") == ("5ced39dfa4ba", "5ced39dfa4ba")
+
+
+def test_resolve_rejects_malformed_digest() -> None:
+    from openxr_operator.backends.local_ollama import _resolve_model_id
+
+    with pytest.raises(ModelError, match="invalid digest"):
+        _resolve_model_id("qwen2.5vl:7b@sha256:not-hex")
+
+
+def test_health_digest_pin_matches_content_hash_not_tag(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resp = _Resp(payload={"models": [{"name": "qwen2.5vl:7b", "digest": "a" * 64}]})
+    b = _ollama(monkeypatch, resp, model="qwen2.5vl:7b@sha256:" + "a" * 64)
+    assert b.health() is True
+
+
+def test_health_digest_pin_mismatch_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resp = _Resp(payload={"models": [{"name": "qwen2.5vl:7b", "digest": "b" * 64}]})
+    b = _ollama(monkeypatch, resp, model="qwen2.5vl:7b@sha256:" + "a" * 64)
+    assert b.health() is False
+
+
+def test_health_bare_digest_id_prefix_match(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resp = _Resp(
+        payload={
+            "models": [{"name": "qwen2.5vl:7b", "digest": "5ced39dfa4ba" + "c" * 52}]
+        }
+    )
+    b = _ollama(monkeypatch, resp, model="5ced39dfa4ba")
+    assert b.health() is True

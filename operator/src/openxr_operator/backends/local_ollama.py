@@ -21,13 +21,39 @@ from . import register
 DEFAULT_HOST = "http://127.0.0.1:11434"
 
 
+def _resolve_model_id(model: str) -> tuple[str, str | None]:
+    """Map a configured model id to (request_model, digest_or_prefix).
+
+    S-09 / escalation item 2d: Ollama rejects `name@sha256:<digest>` on
+    /api/chat and /api/show (400 "invalid model name"). The content-addressed
+    bare digest id IS accepted, and is the strongest pin. Translate:
+    - `name@sha256:<64-hex>` -> request the 12-hex digest prefix; health
+      checks the full digest against /api/tags entries.
+    - a bare hex id (>=12 chars) is used as-is; health checks prefix match.
+    - anything else is a tag (`:latest` appended if missing); no digest.
+    """
+    if "@sha256:" in model:
+        digest = model.rsplit("@sha256:", 1)[1].lower()
+        if len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+            raise ModelError(f"invalid digest in model id {model!r} (S-09)")
+        return digest[:12], digest
+    bare = model.lower()
+    if len(bare) >= 12 and all(c in "0123456789abcdef" for c in bare):
+        return bare, bare
+    if ":" not in model:
+        return model + ":latest", None
+    return model, None
+
+
 @register("local_ollama")
 class OllamaBackend:
     backend_id = "local_ollama"
 
     def __init__(self, cfg: dict[str, Any]) -> None:
         self._host = str(cfg.get("host", DEFAULT_HOST)).rstrip("/")
-        self._model = str(cfg.get("model", "qwen2.5vl:7b"))
+        self._request_model, self._digest = _resolve_model_id(
+            str(cfg.get("model", "qwen2.5vl:7b"))
+        )
         # num_ctx is configuration, not a constant: W4 measures sufficiency
         # against the real demo scene tree and records the number (S-06).
         self._num_ctx = int(cfg.get("num_ctx", 8192))
@@ -59,15 +85,15 @@ class OllamaBackend:
             return False
         if not isinstance(body, dict):
             return False
-        names = {
-            str(m.get("name", ""))
-            for m in body.get("models", [])
-            if isinstance(m, dict)
-        }
-        want = self._model.split("@", 1)[0]  # digest pin (S-09) is not a tag
-        if ":" not in want:
-            want += ":latest"
-        return want in names
+        entries = [m for m in body.get("models", []) if isinstance(m, dict)]
+        if self._digest is not None:
+            # Digest-pinned (S-09): match the content hash, not the tag.
+            return any(
+                str(m.get("digest", "")).lower().startswith(self._digest)
+                for m in entries
+            )
+        names = {str(m.get("name", "")) for m in entries}
+        return self._request_model in names
 
     def act(
         self,
@@ -84,7 +110,7 @@ class OllamaBackend:
                 f"max_images_per_request={cap.max_images_per_request}"
             )
         payload: dict[str, Any] = {
-            "model": self._model,
+            "model": self._request_model,
             "messages": [
                 {"role": "system", "content": system},
                 {
@@ -113,7 +139,7 @@ class OllamaBackend:
         content = (body.get("message") or {}).get("content", "")
         return parse_model_response(
             content,
-            str(body.get("model", self._model)),
+            str(body.get("model", self._request_model)),
             self.backend_id,
             "native",
             time.monotonic_ns() - t0,
