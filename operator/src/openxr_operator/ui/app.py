@@ -54,6 +54,12 @@ def create_app(
             or ""
         )
         if not hmac.compare_digest(supplied, ui_token):
+            app.logger.info(
+                "auth reject: supplied_len=%d expected_len=%d match=%s",
+                len(supplied),
+                len(ui_token),
+                hmac.compare_digest(supplied, ui_token),
+            )
             abort(401)
         if (
             request.method == "POST"
