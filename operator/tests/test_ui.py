@@ -91,6 +91,17 @@ def test_post_requires_origin_allowlist(engine: FakeEngine, tmp_path: Path) -> N
     assert client.post("/task", data=data, headers=ORIGIN).status_code == 302
 
 
+def test_referer_fallback_when_origin_stripped(engine: FakeEngine, tmp_path: Path) -> None:
+    client = _client(_runtime(engine, tmp_path, [FINISH]))
+    data = {"token": "secret", "task": "x"}
+    ok = client.post(
+        "/task", data=data, headers={"Referer": "http://127.0.0.1:5000/?token=secret"}
+    )
+    assert ok.status_code == 302  # Origin absent, Referer allowlisted
+    bad = client.post("/task", data=data, headers={"Referer": "https://evil.example/"})
+    assert bad.status_code == 403
+
+
 def test_security_headers_and_no_third_party_origins(
     engine: FakeEngine, tmp_path: Path
 ) -> None:

@@ -16,12 +16,28 @@ Security shape:
 from __future__ import annotations
 
 import hmac
+from typing import Any
 
 from flask import Flask, abort, redirect, render_template, request, url_for
 
 from .runtime import UIRuntime
 
 DEFAULT_ORIGINS = ("http://127.0.0.1:5000", "http://localhost:5000")
+
+
+def _origin_ok(req: Any, allowed: tuple[str, ...]) -> bool:
+    """Origin allowlist with the standard Referer fallback.
+
+    Some browsers/filters strip the Origin header on form POSTs. A missing
+    Origin is then checked against Referer instead; a missing-or-foreign
+    value in both is rejected. A present-but-foreign Origin is always
+    rejected (no fallback for explicitly wrong origins).
+    """
+    origin = req.headers.get("Origin", "")
+    if origin:
+        return origin in allowed
+    referer = req.headers.get("Referer", "")
+    return any(referer.startswith(base + "/") for base in allowed)
 
 
 def create_app(
@@ -61,10 +77,7 @@ def create_app(
                 hmac.compare_digest(supplied, ui_token),
             )
             abort(401)
-        if (
-            request.method == "POST"
-            and request.headers.get("Origin", "") not in allowed_origins
-        ):
+        if request.method == "POST" and not _origin_ok(request, allowed_origins):
             abort(403)
 
     @app.get("/")

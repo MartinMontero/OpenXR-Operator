@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="3">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>OpenXR Operator</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css', token=token) }}">
@@ -73,5 +72,24 @@
       {% endif %}
     </section>
   </main>
+<script>
+// Poll status without stealing focus: only reload on completion or a new
+// approval request, never while the user is typing.
+let lastStatus = "";
+setInterval(async () => {
+  try {
+    const r = await fetch("/status?token={{ token }}");
+    if (!r.ok) return;
+    const s = JSON.stringify(await r.json());
+    if (s !== lastStatus) {
+      lastStatus = s;
+      const parsed = JSON.parse(s);
+      if (parsed.pending.length > 0 || parsed.state === "done" || parsed.state === "error") {
+        location.reload();
+      }
+    }
+  } catch (e) { /* keep the current page */ }
+}, 3000);
+</script>
 </body>
 </html>
