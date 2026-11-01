@@ -102,6 +102,15 @@ def test_referer_fallback_when_origin_stripped(engine: FakeEngine, tmp_path: Pat
     assert bad.status_code == 403
 
 
+def test_sec_fetch_site_same_origin_accepted(engine: FakeEngine, tmp_path: Path) -> None:
+    client = _client(_runtime(engine, tmp_path, [FINISH]))
+    data = {"token": "secret", "task": "x"}
+    ok = client.post("/task", data=data, headers={"Sec-Fetch-Site": "same-origin"})
+    assert ok.status_code == 302  # no Origin/Referer needed with fetch metadata
+    bad = client.post("/task", data=data, headers={"Sec-Fetch-Site": "cross-site"})
+    assert bad.status_code == 403
+
+
 def test_security_headers_and_no_third_party_origins(
     engine: FakeEngine, tmp_path: Path
 ) -> None:

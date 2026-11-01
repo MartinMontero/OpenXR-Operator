@@ -36,6 +36,10 @@ def _origin_ok(req: Any, allowed: tuple[str, ...]) -> bool:
     origin = req.headers.get("Origin", "")
     if origin:
         return origin in allowed
+    # Modern browsers send Sec-Fetch-Site on same-origin form POSTs; a
+    # cross-site page cannot forge it. Accept it as the primary fallback.
+    if req.headers.get("Sec-Fetch-Site", "") == "same-origin":
+        return True
     referer = req.headers.get("Referer", "")
     return any(referer.startswith(base + "/") for base in allowed)
 
@@ -58,7 +62,7 @@ def create_app(
         )
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         return response
 
     @app.before_request
