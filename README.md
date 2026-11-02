@@ -4,15 +4,15 @@
 
 OpenXR Operator is an AI agent that watches your running Godot XR application, understands what's in it, and acts on it — moving controllers, navigating menus, writing and fixing code — while you stay in charge. You describe what you want in plain language. It proposes every change in plain language. Nothing happens until you approve it (D-14).
 
-This is an open-source, vendor-clean alternative to Meta's XR Operator, built for the Godot engine. No coding required to use it. No cloud service required to run it. No data leaves your machine unless you explicitly configure it to.
+This is an open-source, vendor-clean alternative to Facebook's XR Operator, built for the Godot engine. No coding required to use it. No cloud service required to run it. No data leaves your machine unless you explicitly configure it to.
 
 ## Why this exists
 
-Meta's XR Operator demonstrated that an AI agent can meaningfully help build and test XR experiences. But it's locked to Meta's hardware, Meta's AI services, and Meta's ecosystem. OpenXR Operator takes the same core idea — an agent that sees your XR app and acts on your instructions — and builds it open, private, and independent:
+Facebook's XR Operator demonstrated that an AI agent can meaningfully help build and test XR experiences. But it's locked to Facebook's hardware, Facebook's AI services, and Facebook's ecosystem. OpenXR Operator takes the same core idea — an agent that sees your XR app and acts on your instructions — and builds it open, private, and independent:
 
 - **Open source.** The in-engine plugin is MIT-licensed (use it however you want). The agent is AGPL-3.0-or-later (modifications must stay open).
 - **Privacy-first.** The AI runs on your own machine by default. Your project's screenshots and scene data never leave your computer unless you explicitly opt in to a hosted AI provider — and even then, it connects to exactly one provider you choose, never silently (D-12).
-- **No vendor lock-in.** Meta, OpenAI, and xAI are permanently blocked at the code level — not by policy, by architecture (D-11). The system is built for the open ecosystem, not to feed another platform's moat.
+- **No vendor lock-in.** Facebook, OpenAI, and xAI are permanently blocked at the code level — not by policy, by architecture (D-11). The system is built for the open ecosystem, not to feed another platform's moat.
 - **Godot-native.** Built for Godot 4.7+, the open-source game engine. No Unity. No Unreal. No proprietary runtime.
 
 ## Who this is for
@@ -129,7 +129,7 @@ Every change to the codebase must pass all of the automated checks listed below 
 
 | Gate | What it checks |
 |---|---|
-| **Vendor gate** | Scans all code and dependency lock files to confirm nothing from Meta, OpenAI, or xAI is present — packages, imports, API endpoints. If someone adds an `openai` package, this fails immediately. |
+| **Vendor gate** | Scans all code and dependency lock files to confirm nothing from Facebook, OpenAI, or xAI is present — packages, imports, API endpoints. If someone adds an `openai` package, this fails immediately. |
 | **Licence gate** | Verifies every component carries the correct open-source licence (MIT for the addon and layer, AGPL for the agent). |
 | **Bind gate** | Confirms the system only listens on `127.0.0.1` (your machine only), never on `0.0.0.0` (all network interfaces, which would expose it to other devices on your network). |
 | **Implicit-layer gate** | Ensures the optional OpenXR layer cannot activate itself silently — it must be explicitly enabled per application, per environment. |
@@ -148,7 +148,7 @@ These are architectural commitments, not configuration options. They cannot be t
 **Your data stays on your machine.**
 The system only accepts connections from localhost — no device on your network can reach it. By default, it makes zero outbound connections. If you configure a hosted AI provider, it opens exactly one outbound connection to that provider's domain. The trade-off is explicit and documented: every hosted provider you enable is a path by which a screenshot of your project and its scene tree leave the machine (D-12).
 
-**No connection to Meta, OpenAI, or xAI. Ever.**
+**No connection to Facebook, OpenAI, or xAI. Ever.**
 These vendors' endpoints are on a permanent deny list applied after all other network resolution and cannot be overridden by configuration (D-11). Azure OpenAI and api.llama.com endpoints are also denied.
 
 **Authentication before everything.**
