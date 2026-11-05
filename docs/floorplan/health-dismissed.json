@@ -1,0 +1,6 @@
+{
+  "ui-endpoints-no-auth-check": {
+    "reason": "Every route requires the UI token (query/form/header) and POST additionally enforces an Origin allowlist (ui/app.py before_request). Scanner cannot see the before_request gate.",
+    "dismissed_by": "human review"
+  }
+}

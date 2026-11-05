@@ -1,0 +1,187 @@
+{
+  "$schema": "floorplan/architecture@1",
+  "project": {
+    "name": "OpenXR Operator",
+    "summary": "Build XR experiences by describing them. A local AI agent watches a running Godot app, proposes changes in plain language, and only acts after a human approves each one. No coding required to use it, no hosted service required to run it.",
+    "entrypoints": [
+      "operator/src/openxr_operator/cli.py",
+      "operator/src/openxr_operator/ui/app.py"
+    ]
+  },
+  "audience": "everyone",
+  "include": ["code", "config", "docs"],
+  "nodes": [
+    {
+      "id": "demo",
+      "label": "Demo Godot app",
+      "kind": "ui",
+      "summary": "The little test app the agent watches and changes: a status label and XR controllers.",
+      "paths": ["demo_project/**"]
+    },
+    {
+      "id": "addon",
+      "label": "Godot addon",
+      "kind": "library",
+      "summary": "Lives inside the running app and answers the agent over an authenticated local channel: scene tree, captures, property changes, controller input.",
+      "paths": ["addon/**"]
+    },
+    {
+      "id": "operator",
+      "label": "Python agent",
+      "kind": "service",
+      "summary": "The local brain: observes the app, asks the model for the next action, and executes only approved changes.",
+      "paths": ["operator/src/openxr_operator/**"]
+    },
+    {
+      "id": "operator.driver",
+      "label": "Engine channel",
+      "kind": "library",
+      "parent": "operator",
+      "summary": "Talks to the addon over a token-first, loopback-only WebSocket, and verifies every captured frame before trusting it.",
+      "paths": [
+        "operator/src/openxr_operator/driver.py",
+        "operator/src/openxr_operator/godot_driver.py",
+        "operator/src/openxr_operator/settle.py"
+      ]
+    },
+    {
+      "id": "operator.flow",
+      "label": "Flow runner",
+      "kind": "library",
+      "parent": "operator",
+      "summary": "Runs repeatable, model-free test flows and writes a full evidence bundle with JUnit output.",
+      "paths": [
+        "operator/src/openxr_operator/flow.py",
+        "operator/src/openxr_operator/selectors.py",
+        "operator/src/openxr_operator/runner.py",
+        "operator/src/openxr_operator/artifacts.py"
+      ]
+    },
+    {
+      "id": "operator.model",
+      "label": "Model backends",
+      "kind": "library",
+      "parent": "operator",
+      "summary": "Picks and calls AI backends — local Ollama by default, hosted only if a human opts in — with hard blocks on excluded vendors and no automatic fallback.",
+      "paths": [
+        "operator/src/openxr_operator/model.py",
+        "operator/src/openxr_operator/backends/**"
+      ]
+    },
+    {
+      "id": "operator.agent",
+      "label": "Action loop and approvals",
+      "kind": "library",
+      "parent": "operator",
+      "summary": "The safety core: model output is validated, contained, summarized in plain language for approval, then executed and hash-chained into the audit log.",
+      "paths": [
+        "operator/src/openxr_operator/agent.py",
+        "operator/src/openxr_operator/approval.py",
+        "operator/src/openxr_operator/auditlog.py",
+        "operator/src/openxr_operator/fsguard.py",
+        "operator/src/openxr_operator/schema.py"
+      ]
+    },
+    {
+      "id": "operator.ui",
+      "label": "Browser control panel",
+      "kind": "ui",
+      "parent": "operator",
+      "summary": "The part a non-developer actually uses: a task box and plain-language Approve/Reject cards, token-gated on loopback only.",
+      "paths": ["operator/src/openxr_operator/ui/**"]
+    },
+    {
+      "id": "operator.tests",
+      "label": "Test suite",
+      "kind": "test",
+      "parent": "operator",
+      "summary": "130 executed tests proving the gates: rejected actions never reach the engine, tampering is detected, pins fail closed.",
+      "paths": ["operator/tests/**"]
+    },
+    {
+      "id": "flows",
+      "label": "Saved test flows",
+      "kind": "config",
+      "summary": "YAML flows saved from sessions — the power-user and regression layer, never hand-written by end users.",
+      "paths": ["flows/**"]
+    },
+    {
+      "id": "tools",
+      "label": "CI and security gates",
+      "kind": "infra",
+      "summary": "Vendor scan, licence and bind gates, digest-pinned actions, secrets scanning and SBOM generation, all blocking.",
+      "paths": ["tools/**", ".github/**"]
+    },
+    {
+      "id": "kit",
+      "label": "Kit and decisions",
+      "kind": "config",
+      "summary": "The build kit, frozen contracts, and the decision register that explains why the system looks the way it does.",
+      "paths": ["docs/**", "swarm/**"]
+    },
+    {
+      "id": "layer",
+      "label": "OpenXR API layer (v2)",
+      "kind": "library",
+      "summary": "Optional explicit, environment-scoped layer for capturing the true composited headset frame. Deferred in v1 (D-04).",
+      "paths": ["layer/**"]
+    },
+    {
+      "id": "ollama",
+      "label": "Local model server",
+      "kind": "external",
+      "summary": "Ollama on loopback: the default, offline, digest-pinned vision model (qwen2.5vl:7b). Project data never leaves the machine.",
+      "hosts": ["127.0.0.1"]
+    }
+  ],
+  "edges": [
+    {
+      "from": "operator.driver",
+      "to": "addon",
+      "kind": "rpc",
+      "label": "ws://127.0.0.1:9099",
+      "description": "Token-first authenticated WebSocket: the only channel between the agent and the engine."
+    },
+    {
+      "from": "addon",
+      "to": "demo",
+      "kind": "rpc",
+      "label": "observes and mutates",
+      "description": "The addon reads the scene tree, captures frames, sets properties and injects controller input in the running demo app."
+    },
+    {
+      "from": "operator.agent",
+      "to": "ollama",
+      "kind": "http",
+      "label": "/api/chat (local inference)",
+      "description": "One schema-constrained action per step, digest-pinned model, no automatic fallback to any other provider."
+    }
+  ],
+  "tour": [
+    {
+      "node": "demo",
+      "title": "Start with a running app",
+      "note": "This is the app the agent watches. Press Play in Godot, then describe a change in the browser."
+    },
+    {
+      "node": "addon",
+      "title": "The addon answers, safely",
+      "note": "It only listens on loopback, only after a token handshake. Browsers can't reach it."
+    },
+    {
+      "node": "operator.agent",
+      "title": "Model proposes, you approve",
+      "note": "Every mutation is validated, contained, and shown to you in plain language before it can execute."
+    },
+    {
+      "node": "operator.ui",
+      "title": "Your control panel",
+      "note": "The task box and the Approve/Reject cards: the whole product for a non-developer."
+    },
+    {
+      "node": "tools",
+      "title": "The gates keep it clean",
+      "note": "Vendor scan, licence gate, digest pins and secrets scanning run on every commit."
+    }
+  ]
+}
